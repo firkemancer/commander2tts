@@ -607,23 +607,39 @@
             border: 2px solid var(--border);
             border-radius: 12px;
             padding: 2rem;
-            max-width: 800px;
+            max-width: 1200px;
+            width: 90vw;
             max-height: 80vh;
             overflow-y: auto;
             position: relative;
         }
 
         .modal-close {
-            position: absolute;
-            top: 1rem;
-            right: 1rem;
-            background: #e74c3c;
-            color: white;
+            position: sticky;
+            top: 0.25rem;
+            right: 0.5rem;
+            float: right;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
             border: none;
-            padding: 0.5rem 1rem;
-            border-radius: 6px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
             cursor: pointer;
-            font-weight: 600;
+            font-weight: bold;
+            font-size: 1.2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+            z-index: 10;
+        }
+
+        .modal-close:hover {
+            background: var(--accent);
+            color: white;
+            transform: scale(1.1);
         }
 
         .modal-title {
@@ -634,8 +650,8 @@
 
         .alt-art-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 1rem;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 1.5rem;
             margin-top: 1rem;
         }
 
@@ -902,9 +918,8 @@
         }
 
         .custom-url-section {
-            margin-top: 1rem;
-            padding-top: 1rem;
-            border-top: 2px solid var(--border);
+            margin-top: 0.5rem;
+            padding-top: 0.5rem;
         }
 
         .custom-url-input {
@@ -1338,8 +1353,7 @@
 
     <div class="modal" id="altArtModal">
         <div class="modal-content">
-            <button class="modal-close" id="closeModal">✕ Close</button>
-            <h2 class="modal-title">Choose Alternate Art</h2>
+            <button class="modal-close" id="closeModal">✕</button>
             <div class="custom-url-section">
                 <h3>Or use custom image URL (Imgur, etc.)</h3>
                 <input 
@@ -1358,7 +1372,7 @@
     <!-- Export Modal (includes card back and filename) -->
     <div class="modal" id="exportModal">
         <div class="card-back-modal-content">
-            <button class="modal-close" id="closeExportModal">✕ Close</button>
+            <button class="modal-close" id="closeExportModal">✕</button>
             <h2 class="modal-title">Export to Tabletop Simulator</h2>
             
             <div class="card-back-input-group">
@@ -2215,12 +2229,6 @@
                     
                     if (grid.children.length === 0) {
                         grid.innerHTML = '<div class="empty-state">No images found for this card</div>';
-                    } else {
-                        // Add info about number of printings found
-                        const info = document.createElement('div');
-                        info.style.cssText = 'text-align: center; padding: 1rem; color: var(--text-secondary); font-size: 0.9rem;';
-                        info.textContent = `Found ${grid.children.length} printing(s)`;
-                        grid.insertBefore(info, grid.firstChild);
                     }
                 } else {
                     grid.innerHTML = '<div class="empty-state">No alternate printings found</div>';
