@@ -1260,6 +1260,9 @@
             <button class="deck-menu-btn" id="deckMenuBtn">
                 ⋮
                 <div class="deck-menu" id="deckMenu">
+                    <div class="deck-menu-item" id="renameDeckBtn">
+                        <span>Rename Deck</span>
+                    </div>
                     <div class="deck-menu-item" id="exportDeckBtn">
                         <span>Export to TTS</span>
                         <img class="card-back-preview" id="cardBackPreview" src="https://i.imgur.com/Hg8CwwU.jpeg" alt="Card back">
@@ -1406,6 +1409,44 @@
             <div class="card-back-actions">
                 <button class="card-back-btn card-back-btn-reset" id="resetCardBackBtn">Reset to Default</button>
                 <button class="card-back-btn card-back-btn-save" id="exportBtn">Export to TTS</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Rename Deck Modal -->
+    <div class="modal" id="renameDeckModal">
+        <div class="modal-content" style="max-width: 500px;">
+            <button class="modal-close" id="closeRenameDeckModal">✕</button>
+            <h2 class="modal-title">Rename Deck</h2>
+            <div class="card-back-input-group">
+                <label for="deckNameInput">Deck Name</label>
+                <input 
+                    type="text" 
+                    class="card-back-url-input" 
+                    id="deckNameInput" 
+                    placeholder="Enter deck name..."
+                    maxlength="50"
+                />
+            </div>
+            <div class="card-back-actions">
+                <button class="card-back-btn card-back-btn-save" id="saveRenameDeckBtn">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Deck Confirmation Modal -->
+    <div class="modal" id="deleteDeckModal">
+        <div class="modal-content" style="max-width: 400px; padding: 1.5rem;">
+            <button class="modal-close" id="closeDeleteDeckModal">✕</button>
+            <h2 class="modal-title" style="font-size: 1.2rem; margin-bottom: 0.75rem;">Delete Deck</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;">
+                Are you sure you want to delete "<span id="deleteDeckName" style="color: var(--accent); font-weight: bold;"></span>"?
+                <br><br>
+                This action cannot be undone.
+            </p>
+            <div class="card-back-actions" style="gap: 1rem;">
+                <button class="card-back-btn" id="cancelDeleteBtn" style="background: var(--bg-secondary); color: var(--text-primary);">Cancel</button>
+                <button class="card-back-btn" id="confirmDeleteBtn" style="background: #e74c3c; border-color: #e74c3c;">Delete Deck</button>
             </div>
         </div>
     </div>
@@ -1570,7 +1611,24 @@
             });
 
             document.getElementById('exportDeckBtn').addEventListener('click', openExportModal);
-            document.getElementById('deleteDeckBtn').addEventListener('click', deleteCurrentDeck);
+            document.getElementById('deleteDeckBtn').addEventListener('click', openDeleteDeckModal);
+            document.getElementById('renameDeckBtn').addEventListener('click', openRenameDeckModal);
+
+            // Delete Deck Confirmation Modal
+            document.getElementById('closeDeleteDeckModal').addEventListener('click', closeDeleteDeckModal);
+            document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteDeckModal);
+            document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDeleteDeck);
+
+            // Rename Deck Modal
+            document.getElementById('closeRenameDeckModal').addEventListener('click', closeRenameDeckModal);
+            document.getElementById('saveRenameDeckBtn').addEventListener('click', saveRenameDeck);
+            
+            // Allow Enter key to save rename
+            document.getElementById('deckNameInput').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    saveRenameDeck();
+                }
+            });
 
             // Export Modal
             document.getElementById('closeExportModal').addEventListener('click', closeExportModal);
@@ -1582,6 +1640,19 @@
                 const url = e.target.value.trim();
                 if (url) {
                     document.getElementById('cardBackPreviewLarge').src = url;
+                }
+            });
+
+            // Click outside modals to close
+            document.getElementById('renameDeckModal').addEventListener('click', (e) => {
+                if (e.target.id === 'renameDeckModal') {
+                    closeRenameDeckModal();
+                }
+            });
+            
+            document.getElementById('deleteDeckModal').addEventListener('click', (e) => {
+                if (e.target.id === 'deleteDeckModal') {
+                    closeDeleteDeckModal();
                 }
             });
 
@@ -2621,7 +2692,8 @@
                     BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
                     NumHeight: 1,
                     NumWidth: 1,
-                    BackIsHidden: true
+                    BackIsHidden: true,
+                    UniqueBack: false
                 };
             });
 
@@ -2670,7 +2742,8 @@
                         BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
                         NumHeight: 1,
                         NumWidth: 1,
-                        BackIsHidden: true
+                        BackIsHidden: true,
+                        UniqueBack: false
                     }
                 }
             };
@@ -2708,7 +2781,8 @@
                         BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
                         NumHeight: 1,
                         NumWidth: 1,
-                        BackIsHidden: true
+                        BackIsHidden: true,
+                        UniqueBack: false
                     };
                 });
                 
@@ -2798,15 +2872,68 @@
             document.getElementById('cardBackPreviewLarge').src = defaultUrl;
         }
 
-        function deleteCurrentDeck() {
+        function openRenameDeckModal() {
             const deck = getCurrentDeck();
             const deckName = deck.name || `Deck ${currentDeckIndex + 1}`;
             
-            if (!confirm(`Are you sure you want to delete "${deckName}"? This cannot be undone.`)) {
-                document.getElementById('deckMenu').classList.remove('show');
+            document.getElementById('deckNameInput').value = deckName;
+            document.getElementById('renameDeckModal').classList.add('active');
+            document.getElementById('deckMenu').classList.remove('show');
+            
+            // Focus the input and select all text
+            setTimeout(() => {
+                const input = document.getElementById('deckNameInput');
+                input.focus();
+                input.select();
+            }, 100);
+        }
+
+        function closeRenameDeckModal() {
+            document.getElementById('renameDeckModal').classList.remove('active');
+        }
+
+        function saveRenameDeck() {
+            const newName = document.getElementById('deckNameInput').value.trim();
+            
+            if (!newName) {
+                showToast('Please enter a deck name', 'error');
                 return;
             }
             
+            const deck = getCurrentDeck();
+            deck.name = newName;
+            
+            saveDecks();
+            updateDeckSelector();
+            closeRenameDeckModal();
+            showToast('Deck renamed successfully', 'success');
+        }
+
+        function openDeleteDeckModal() {
+            const deck = getCurrentDeck();
+            const deckName = deck.name || `Deck ${currentDeckIndex + 1}`;
+            
+            // Check if deck is completely empty (no cards, no commander, no tokens)
+            const isEmpty = deck.cards.length === 0 && 
+                           (!deck.commander || deck.commander.length === 0) && 
+                           (!deck.tokens || deck.tokens.length === 0);
+            
+            if (isEmpty) {
+                // Skip confirmation for empty decks
+                confirmDeleteDeck();
+                return;
+            }
+            
+            document.getElementById('deleteDeckName').textContent = deckName;
+            document.getElementById('deleteDeckModal').classList.add('active');
+            document.getElementById('deckMenu').classList.remove('show');
+        }
+
+        function closeDeleteDeckModal() {
+            document.getElementById('deleteDeckModal').classList.remove('active');
+        }
+
+        function confirmDeleteDeck() {
             decks.splice(currentDeckIndex, 1);
             
             // If this was the last deck, create a new blank one
@@ -2823,11 +2950,8 @@
             saveDecks();
             updateDeckSelector();
             renderDeck();
-            updateCardBackPreview();
-            showNotification('Deck deleted', 'info');
-            
-            // Close menu
-            document.getElementById('deckMenu').classList.remove('show');
+            closeDeleteDeckModal();
+            showToast('Deck deleted', 'success');
         }
 
         function updateCardBackPreview() {
