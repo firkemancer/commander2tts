@@ -2489,11 +2489,19 @@
             if (isCommander) {
                 deck.commander.image_url = imageUrl;
             } else if (isToken) {
-                const token = deck.tokens.find(t => t.id === card.id);
-                if (token) token.image_url = imageUrl;
+                // Update all tokens with matching ID
+                deck.tokens.forEach(t => {
+                    if (t.id === card.id) {
+                        t.image_url = imageUrl;
+                    }
+                });
             } else {
-                const deckCard = deck.cards.find(c => c.id === card.id);
-                if (deckCard) deckCard.image_url = imageUrl;
+                // Update all cards with matching ID (handles duplicates)
+                deck.cards.forEach(c => {
+                    if (c.id === card.id) {
+                        c.image_url = imageUrl;
+                    }
+                });
             }
 
             saveDecks();
