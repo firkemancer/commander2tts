@@ -127,11 +127,11 @@ def main():
     script_dir = Path(__file__).parent.absolute()
     os.chdir(script_dir)
     
-    # Check if commander2tts.html exists
-    html_file = script_dir / "commander2tts.html"
+    # Check if index.html exists
+    html_file = script_dir / "index.html"
     if not html_file.exists():
-        print(f"❌ Error: commander2tts.html not found in {script_dir}")
-        print("   Please make sure commander2tts.html is in the same folder as this script.")
+        print(f"❌ Error: index.html not found in {script_dir}")
+        print("   Please make sure index.html is in the same folder as this script.")
         sys.exit(1)
     
     # Kill any existing server on the port
@@ -147,14 +147,14 @@ def main():
             print("=" * 60)
             print(f"\n📂 Serving from: {script_dir}")
             print(f"🌐 Server running at: http://localhost:{PORT}")
-            print(f"🎮 Open this URL: http://localhost:{PORT}/commander2tts.html")
+            print(f"🎮 Open this URL: http://localhost:{PORT}/index.html")
             print("\n💡 Press Ctrl+C to stop the server")
             print("=" * 60)
             print()
             
             # Try to open browser automatically
             try:
-                webbrowser.open(f"http://localhost:{PORT}/commander2tts.html")
+                webbrowser.open(f"http://localhost:{PORT}/index.html")
                 print("✅ Opening browser automatically...\n")
             except:
                 print("⚠️  Could not open browser automatically. Please open the URL manually.\n")

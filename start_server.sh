@@ -4,7 +4,7 @@
 # Simple wrapper to start a local HTTP server
 
 PORT=8000
-HTML_FILE="commander2tts.html"
+HTML_FILE="index.html"
 
 echo "========================================================"
 echo "⚔️  COMMANDER2TTS Server Launcher"
