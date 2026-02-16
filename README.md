@@ -7,9 +7,9 @@ If you want to host it locally, check the **Quick Start** guide
 ## Features
 
 - Import decks from Moxfield
-- Manually search and add cards
+- Manually search and add/remove cards
 - Choose alternate card art
-- Use custom image URLs (both alternate art and back art)
+- Use custom image URLs (both alternate card art and back card art)
 - Multiple deck management
 - Export to Tabletop Simulator's custom object JSON format
 - Local storage (no account needed)
