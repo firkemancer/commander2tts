@@ -1754,7 +1754,7 @@
 
             saveDecks();
             updateDeckSelector();
-            renderDeck();
+            updateCardCounts();
         }
 
         // Moxfield import
@@ -2178,6 +2178,164 @@
             }
         }
 
+        function updateCardCounts() {
+            const deck = getCurrentDeck();
+            
+            // Update main count
+            document.getElementById('deckCount').textContent = `${deck.cards.length}/99`;
+            
+            // Update token count
+            if (deck.tokens && deck.tokens.length > 0) {
+                document.getElementById('tokenCount').textContent = deck.tokens.length;
+            }
+            
+            // Check if we're viewing search results
+            const searchInput = document.getElementById('cardSearch');
+            const hasSearchQuery = searchInput && searchInput.value.trim().length >= 2;
+            
+            if (hasSearchQuery) {
+                // Just update badges for existing cards in view
+                updateIndividualCardCounts();
+            } else {
+                // Re-render the deck list to handle added/removed cards
+                renderDeck();
+            }
+        }
+        
+        function updateIndividualCardCounts() {
+            const deck = getCurrentDeck();
+            
+            // Count occurrences of each card
+            const cardCounts = {};
+            deck.cards.forEach(card => {
+                const colorKey = (card.colors || []).sort().join('');
+                const uniqueKey = `${card.name}|${colorKey}`;
+                cardCounts[uniqueKey] = (cardCounts[uniqueKey] || 0) + 1;
+            });
+            
+            // Update count badges in the DOM
+            const deckSearchQuery = document.getElementById('deckSearch')?.value.trim().toLowerCase() || '';
+            
+            const deckCards = document.querySelectorAll('#deckList .deck-card');
+            deckCards.forEach(cardElement => {
+                const cardName = cardElement.querySelector('.deck-card-name')?.textContent;
+                if (!cardName) return;
+                
+                // Find the card data to get colors
+                const cardData = deck.cards.find(c => c.name === cardName);
+                if (!cardData) {
+                    // Card no longer exists in deck - remove it
+                    cardElement.remove();
+                    return;
+                }
+                
+                // Check if card matches current category filter
+                const matchesFilter = currentFilter === 'all' || cardData.type_line.includes(currentFilter);
+                if (!matchesFilter) {
+                    // Card doesn't match category filter - remove it
+                    cardElement.remove();
+                    return;
+                }
+                
+                // Check if card matches deck search query
+                if (deckSearchQuery && !cardName.toLowerCase().includes(deckSearchQuery)) {
+                    // Card doesn't match search query - remove it
+                    cardElement.remove();
+                    return;
+                }
+                
+                const colorKey = (cardData.colors || []).sort().join('');
+                const uniqueKey = `${cardName}|${colorKey}`;
+                const count = cardCounts[uniqueKey] || 1;
+                
+                // Find or create the count badge
+                let countBadge = cardElement.querySelector('.deck-card-count');
+                
+                if (count > 1) {
+                    if (!countBadge) {
+                        // Create new badge
+                        countBadge = document.createElement('div');
+                        countBadge.className = 'deck-card-count';
+                        cardElement.appendChild(countBadge);
+                    }
+                    countBadge.textContent = `×${count}`;
+                } else {
+                    // Remove badge if count is 1
+                    if (countBadge) {
+                        countBadge.remove();
+                    }
+                }
+            });
+            
+            // Check for new cards that need to be added to the list
+            const currentCardNames = new Set();
+            document.querySelectorAll('#deckList .deck-card-name').forEach(el => {
+                currentCardNames.add(el.textContent);
+            });
+            
+            const deckList = document.getElementById('deckList');
+            
+            // Apply current filter to determine which cards should be visible
+            const filteredCards = currentFilter === 'all' ? 
+                deck.cards : 
+                deck.cards.filter(card => card.type_line.includes(currentFilter));
+            
+            const groupedCards = groupCardsByName(filteredCards);
+            groupedCards.forEach(group => {
+                // Check if card matches deck search query
+                const matchesSearch = !deckSearchQuery || group.card.name.toLowerCase().includes(deckSearchQuery);
+                
+                if (!currentCardNames.has(group.card.name) && matchesSearch) {
+                    // New card that matches both filters - add it to the list
+                    const cardElement = createDeckCard(group.card, false, false, group.count, group.ids);
+                    if (deckList) {
+                        deckList.appendChild(cardElement);
+                    }
+                }
+            });
+            
+            // Update token count badges
+            const tokenCounts = {};
+            if (deck.tokens) {
+                deck.tokens.forEach(token => {
+                    const colorKey = (token.colors || []).sort().join('');
+                    const uniqueKey = `${token.name}|${colorKey}`;
+                    tokenCounts[uniqueKey] = (tokenCounts[uniqueKey] || 0) + 1;
+                });
+            }
+            
+            const tokenCards = document.querySelectorAll('#tokenList .deck-card');
+            tokenCards.forEach(cardElement => {
+                const cardName = cardElement.querySelector('.deck-card-name')?.textContent;
+                if (!cardName) return;
+                
+                const tokenData = deck.tokens.find(t => t.name === cardName);
+                if (!tokenData) {
+                    cardElement.remove();
+                    return;
+                }
+                
+                const colorKey = (tokenData.colors || []).sort().join('');
+                const uniqueKey = `${cardName}|${colorKey}`;
+                const count = tokenCounts[uniqueKey] || 1;
+                
+                let countBadge = cardElement.querySelector('.deck-card-count');
+                
+                if (count > 1) {
+                    if (!countBadge) {
+                        countBadge = document.createElement('div');
+                        countBadge.className = 'deck-card-count';
+                        cardElement.appendChild(countBadge);
+                    }
+                    countBadge.textContent = `×${count}`;
+                } else {
+                    if (countBadge) {
+                        countBadge.remove();
+                    }
+                }
+            });
+        }
+
         function createDeckCard(card, isCommander, isToken = false, count = 1, ids = null) {
             const div = document.createElement('div');
             div.className = 'deck-card';
@@ -2237,7 +2395,7 @@
 
             saveDecks();
             updateDeckSelector();
-            renderDeck();
+            updateCardCounts();
         }
 
         function highlightCards(query) {
