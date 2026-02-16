@@ -8,7 +8,6 @@ If you want to host it locally, check the **Quick Start** guide
 
 Simply clone the repository and run one of the following:
 
-### Windows & Linux - Python Script (Recommended)
 ```bash
 # Windows: Double-click start_server.py
 # Or from command line:
