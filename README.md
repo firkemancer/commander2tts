@@ -4,6 +4,16 @@ Commander2TTS is a simple SPA to import Moxfield MTG Commander decklists, tweak 
 You don't need to setup anything! Just visit firkemancer.github.io/commander2tts
 If you want to host it locally, check the **Quick Start** guide
 
+## Features
+
+- Import decks from Moxfield
+- Manually search and add cards
+- Choose alternate card art
+- Use custom image URLs (both alternate art and back art)
+- Multiple deck management
+- Export to Tabletop Simulator's custom object JSON format
+- Local storage (no account needed)
+
 ## Quick Start
 
 Simply clone the repository and run one of the following:
@@ -36,16 +46,6 @@ The HTML file needs to run on a web server (not just opened directly) because:
 - **CORS restrictions**: Browsers block API requests from `file://` URLs
 - **Moxfield import**: The Moxfield API import requires proper HTTP origin headers
 - **Better compatibility**: Many features work better when served over HTTP
-
-## Features
-
-- Import decks from Moxfield
-- Manually search and add cards
-- Choose alternate card art
-- Use custom image URLs (both alternate art and back art)
-- Multiple deck management
-- Export to Tabletop Simulator's custom object JSON format
-- Local storage (no account needed)
 
 ---
 
