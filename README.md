@@ -8,6 +8,8 @@ If you want to host it locally, check the [Quick Start](https://github.com/firke
 
 - Import decks from Moxfield
 - Import decks from Tabletop Simulator's Custom Object JSON file
+  - compatible with JSON files exported from frogtown.me
+  - JSON files from frogtown.me don't have commander selected by default
 - Manually search and add/remove cards
 - Choose alternate card art
 - Use custom image URLs (both alternate card art and back card art)
