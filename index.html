@@ -1138,6 +1138,62 @@
             background: var(--hover);
             color: var(--text-primary);
         }
+        
+        /* Import Modal Styles */
+        .import-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .import-divider {
+            display: flex;
+            align-items: center;
+            text-align: center;
+            margin: 2rem 0;
+            color: var(--text-secondary);
+        }
+        
+        .import-divider::before,
+        .import-divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 2px solid var(--border);
+        }
+        
+        .import-divider span {
+            padding: 0 1rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.9rem;
+        }
+        
+        .json-dropzone {
+            border: 3px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: var(--bg-primary);
+        }
+        
+        .json-dropzone:hover {
+            border-color: var(--accent);
+            background: var(--hover);
+        }
+        
+        .json-dropzone.dragover {
+            border-color: var(--accent);
+            background: var(--hover);
+            transform: scale(1.02);
+        }
+        
+        .dropzone-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            pointer-events: none;
+        }
+        
         .deck-controls {
             display: flex;
             gap: 0.5rem;
@@ -1247,16 +1303,10 @@
     </script>
     <div class="header">
 		<img src="logo.png" width="420" height="45">
-        <!-- Moxfield Import - Main way to import -->
+        <!-- Import Controls -->
         <div class="moxfield-import-section">
-            <input 
-                type="text" 
-                class="moxfield-input-main" 
-                id="moxfieldUrl" 
-                placeholder="Paste Moxfield deck URL here to import..."
-            />
-            <button class="import-btn-main" id="importBtn">Import Deck</button>
-            <button class="manual-btn" id="manualBtn">+ Manual</button>
+            <button class="import-btn-main" id="importDeckBtn">Import Deck</button>
+            <button class="manual-btn" id="manualBtn">Search Cards</button>
         </div>
         
         <div class="header-controls">
@@ -1458,6 +1508,46 @@
         </div>
     </div>
 
+    <!-- Import Deck Modal -->
+    <div class="modal" id="importDeckModal">
+        <div class="modal-content" style="max-width: 600px;">
+            <button class="modal-close" id="closeImportDeckModal">✕</button>
+            <h2 class="modal-title">Import Deck</h2>
+            
+            <!-- Moxfield Import Section -->
+            <div class="import-section">
+                <h3 style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.75rem;">From Moxfield</h3>
+                <div class="card-back-input-group">
+                    <input 
+                        type="text" 
+                        class="card-back-url-input" 
+                        id="moxfieldUrlModal" 
+                        placeholder="Paste Moxfield deck URL here..."
+                    />
+                </div>
+                <button class="card-back-btn card-back-btn-save" id="importFromMoxfieldBtn">Import from Moxfield</button>
+            </div>
+            
+            <!-- Divider -->
+            <div class="import-divider">
+                <span>or</span>
+            </div>
+            
+            <!-- JSON Import Section -->
+            <div class="import-section">
+                <h3 style="color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 0.75rem;">From TTS JSON File</h3>
+                <div class="json-dropzone" id="jsonDropzone">
+                    <div class="dropzone-content">
+                        <span class="material-icons" style="font-size: 3rem; color: var(--accent); margin-bottom: 0.5rem;">upload_file</span>
+                        <p style="font-size: 1.1rem; margin-bottom: 0.25rem;">Drop JSON file here</p>
+                        <p style="font-size: 0.9rem; color: var(--text-secondary);">or click to browse</p>
+                    </div>
+                    <input type="file" id="jsonFileInput" accept=".json" style="display: none;">
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="card-preview" id="cardPreview">
         <img src="" alt="Card preview" id="previewImg">
     </div>
@@ -1578,8 +1668,38 @@
                 highlightCards(query);
             });
 
-            // Moxfield import
-            document.getElementById('importBtn').addEventListener('click', importFromMoxfield);
+            // Import Deck Modal
+            document.getElementById('importDeckBtn').addEventListener('click', openImportDeckModal);
+            document.getElementById('closeImportDeckModal').addEventListener('click', closeImportDeckModal);
+            document.getElementById('importFromMoxfieldBtn').addEventListener('click', importFromMoxfield);
+            
+            // JSON Import
+            const jsonDropzone = document.getElementById('jsonDropzone');
+            const jsonFileInput = document.getElementById('jsonFileInput');
+            
+            jsonDropzone.addEventListener('click', () => jsonFileInput.click());
+            jsonFileInput.addEventListener('change', handleJsonFileSelect);
+            
+            // Drag and drop
+            jsonDropzone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                jsonDropzone.classList.add('dragover');
+            });
+            
+            jsonDropzone.addEventListener('dragleave', () => {
+                jsonDropzone.classList.remove('dragover');
+            });
+            
+            jsonDropzone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                jsonDropzone.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.name.endsWith('.json')) {
+                    handleJsonFile(file);
+                } else {
+                    showNotification('Please drop a valid JSON file', 'error');
+                }
+            });
 
             // Manual button toggle
             document.getElementById('manualBtn').addEventListener('click', () => {
@@ -1766,15 +1886,19 @@
 
         // Moxfield import
         async function importFromMoxfield() {
-            const url = document.getElementById('moxfieldUrl').value.trim();
-            if (!url) return;
+            const url = document.getElementById('moxfieldUrlModal').value.trim();
+            if (!url) {
+                showNotification('Please enter a Moxfield URL', 'warning');
+                return;
+            }
 
             const deckId = extractMoxfieldId(url);
             if (!deckId) {
                 showNotification('Please enter a valid Moxfield deck URL', 'error', 'Invalid URL');
                 return;
             }
-
+            
+            closeImportDeckModal();
             showLoadingOverlay();
 
             try {
@@ -3037,6 +3161,208 @@
 
         function closeExportModal() {
             document.getElementById('exportModal').classList.remove('active');
+        }
+        
+        function openImportDeckModal() {
+            document.getElementById('importDeckModal').classList.add('active');
+            // Clear previous input
+            document.getElementById('moxfieldUrlModal').value = '';
+        }
+        
+        function closeImportDeckModal() {
+            document.getElementById('importDeckModal').classList.remove('active');
+        }
+        
+        function handleJsonFileSelect(event) {
+            const file = event.target.files[0];
+            if (file) {
+                handleJsonFile(file);
+            }
+        }
+        
+        async function handleJsonFile(file) {
+            try {
+                const text = await file.text();
+                const json = JSON.parse(text);
+                
+                closeImportDeckModal();
+                showLoadingOverlay();
+                
+                await importFromTTSJson(json);
+                
+                hideLoadingOverlay();
+                showNotification('Deck imported successfully from JSON!', 'success');
+                
+            } catch (error) {
+                hideLoadingOverlay();
+                console.error('JSON import error:', error);
+                showNotification('Failed to import JSON file. Please check the file format.', 'error');
+            }
+        }
+        
+        async function importFromTTSJson(ttsJson) {
+            // Create a new deck for the import
+            const newDeck = createNewDeck();
+            newDeck.cards = [];
+            newDeck.tokens = [];
+            newDeck.commander = null;
+            
+            // Add the new deck to the decks array
+            decks.push(newDeck);
+            currentDeckIndex = decks.length - 1;
+            const deck = newDeck;
+            
+            if (!ttsJson.ObjectStates || !Array.isArray(ttsJson.ObjectStates)) {
+                throw new Error('Invalid TTS JSON format');
+            }
+            
+            const objectStates = ttsJson.ObjectStates;
+            let totalCards = 0;
+            let processedCards = 0;
+            
+            // Count total cards first
+            objectStates.forEach(obj => {
+                if (obj.Name === 'DeckCustom' && obj.ContainedObjects) {
+                    totalCards += obj.ContainedObjects.length;
+                } else if (obj.Name === 'Card') {
+                    totalCards += 1;
+                }
+            });
+            
+            // Process each object state
+            for (const obj of objectStates) {
+                // Handle deck of cards
+                if (obj.Name === 'DeckCustom' && obj.ContainedObjects && obj.CustomDeck) {
+                    // Check if this is a token deck based on position (tokens exported at x: 4.4)
+                    const isTokenDeck = obj.Transform?.posX > 4;
+                    
+                    for (const containedObj of obj.ContainedObjects) {
+                        const cardName = containedObj.Nickname;
+                        const cardId = containedObj.CardID;
+                        
+                        // Get the image URL from CustomDeck
+                        const deckKey = String(Math.floor(cardId / 100));
+                        const faceURL = obj.CustomDeck[deckKey]?.FaceURL;
+                        
+                        if (cardName && faceURL) {
+                            // For tokens, try to extract color info from the Scryfall URL
+                            let preferredColors = null;
+                            
+                            if (isTokenDeck && faceURL.includes('scryfall.io')) {
+                                // Extract Scryfall card ID from URL like:
+                                // https://cards.scryfall.io/normal/front/c/2/c2963ce1-f9d8-437a-9489-e0913a8b8d26.jpg
+                                const scryfallIdMatch = faceURL.match(/\/([a-f0-9-]{36})\.jpg/);
+                                if (scryfallIdMatch) {
+                                    const scryfallId = scryfallIdMatch[1];
+                                    try {
+                                        await new Promise(resolve => setTimeout(resolve, 200));
+                                        const cardResponse = await fetch(`https://api.scryfall.com/cards/${scryfallId}`);
+                                        if (cardResponse.ok) {
+                                            const cardData = await cardResponse.json();
+                                            preferredColors = cardData.colors || [];
+                                            console.log(`Extracted colors for ${cardName} from URL: ${preferredColors}`);
+                                        }
+                                    } catch (e) {
+                                        console.log('Could not extract colors from Scryfall URL:', e);
+                                    }
+                                }
+                            }
+                            
+                            // Fetch card data from Scryfall
+                            // If it's from a token deck, prefer token search and pass colors if available
+                            const scryfallCard = await fetchCardByName(cardName, isTokenDeck, preferredColors);
+                            
+                            if (scryfallCard) {
+                                // Use same token/emblem detection logic as Moxfield import
+                                const typeIsTokenOrEmblem = scryfallCard.type_line && (
+                                    scryfallCard.type_line.includes('Token') ||
+                                    scryfallCard.type_line.includes('Emblem') ||
+                                    scryfallCard.type_line === 'Card' ||
+                                    scryfallCard.type_line === 'Creature'
+                                );
+                                
+                                const hasCMC0 = scryfallCard.cmc === 0;
+                                const hasManaCost = scryfallCard.mana_cost && scryfallCard.mana_cost !== '';
+                                const isTokenOrEmblem = typeIsTokenOrEmblem && hasCMC0 && !hasManaCost;
+                                
+                                // Check if this is close to commander position (first deck, near position 0)
+                                const isLikelyCommander = obj.Transform?.posX < 3 && obj.Transform?.posX > -3 
+                                    && obj.ContainedObjects.length === 1;
+                                
+                                if (isLikelyCommander && !deck.commander) {
+                                    deck.commander = {
+                                        id: scryfallCard.id,
+                                        name: scryfallCard.name,
+                                        type_line: scryfallCard.type_line,
+                                        image_url: faceURL, // Use the custom art from JSON
+                                        scryfall_uri: scryfallCard.scryfall_uri,
+                                        cmc: scryfallCard.cmc || 0,
+                                        colors: scryfallCard.colors || []
+                                    };
+                                } else if (isTokenOrEmblem) {
+                                    // Add to tokens array
+                                    deck.tokens.push({
+                                        id: scryfallCard.id,
+                                        name: scryfallCard.name,
+                                        type_line: scryfallCard.type_line,
+                                        image_url: faceURL, // Use the custom art from JSON
+                                        scryfall_uri: scryfallCard.scryfall_uri,
+                                        cmc: scryfallCard.cmc || 0,
+                                        colors: scryfallCard.colors || []
+                                    });
+                                } else {
+                                    // Add to main deck
+                                    deck.cards.push({
+                                        id: scryfallCard.id,
+                                        name: scryfallCard.name,
+                                        type_line: scryfallCard.type_line,
+                                        image_url: faceURL, // Use the custom art from JSON
+                                        scryfall_uri: scryfallCard.scryfall_uri,
+                                        cmc: scryfallCard.cmc || 0,
+                                        colors: scryfallCard.colors || []
+                                    });
+                                }
+                            }
+                            
+                            processedCards++;
+                            updateProgress(processedCards, totalCards, `- Importing cards (${processedCards}/${totalCards})`);
+                        }
+                    }
+                }
+                // Handle single card (likely commander)
+                else if (obj.Name === 'Card' && obj.Nickname) {
+                    const cardName = obj.Nickname;
+                    const deckKey = obj.DeckIDs && obj.DeckIDs.length > 0 ? String(Math.floor(obj.DeckIDs[0] / 100)) : '1';
+                    const faceURL = obj.CustomDeck?.[deckKey]?.FaceURL;
+                    
+                    if (cardName && faceURL) {
+                        const scryfallCard = await fetchCardByName(cardName);
+                        
+                        if (scryfallCard && !deck.commander) {
+                            deck.commander = {
+                                id: scryfallCard.id,
+                                name: scryfallCard.name,
+                                type_line: scryfallCard.type_line,
+                                image_url: faceURL, // Use the custom art from JSON
+                                scryfall_uri: scryfallCard.scryfall_uri,
+                                cmc: scryfallCard.cmc || 0,
+                                colors: scryfallCard.colors || []
+                            };
+                        }
+                        
+                        processedCards++;
+                        updateProgress(processedCards, totalCards, `- Importing cards (${processedCards}/${totalCards})`);
+                    }
+                }
+            }
+            
+            // Set deck name from filename or default
+            deck.name = 'Imported Deck';
+            
+            saveDecks();
+            updateDeckSelector();
+            renderDeck();
+            updateCardCounts();
         }
 
         function resetCardBackToDefault() {
