@@ -7,6 +7,7 @@ If you want to host it locally, check the [Quick Start](https://github.com/firke
 ## Features
 
 - Import decks from Moxfield
+- Import decks from Tabletop Simulator's Custom Object JSON file
 - Manually search and add/remove cards
 - Choose alternate card art
 - Use custom image URLs (both alternate card art and back card art)
