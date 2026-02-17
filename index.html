@@ -3233,6 +3233,9 @@
             for (const obj of objectStates) {
                 // Handle deck of cards
                 if (obj.Name === 'DeckCustom' && obj.ContainedObjects && obj.CustomDeck) {
+                    // Check if this is a token deck based on position (tokens exported at x: 4.4)
+                    const isTokenDeck = obj.Transform?.posX > 4;
+                    
                     for (const containedObj of obj.ContainedObjects) {
                         const cardName = containedObj.Nickname;
                         const cardId = containedObj.CardID;
@@ -3242,10 +3245,46 @@
                         const faceURL = obj.CustomDeck[deckKey]?.FaceURL;
                         
                         if (cardName && faceURL) {
+                            // For tokens, try to extract color info from the Scryfall URL
+                            let preferredColors = null;
+                            
+                            if (isTokenDeck && faceURL.includes('scryfall.io')) {
+                                // Extract Scryfall card ID from URL like:
+                                // https://cards.scryfall.io/normal/front/c/2/c2963ce1-f9d8-437a-9489-e0913a8b8d26.jpg
+                                const scryfallIdMatch = faceURL.match(/\/([a-f0-9-]{36})\.jpg/);
+                                if (scryfallIdMatch) {
+                                    const scryfallId = scryfallIdMatch[1];
+                                    try {
+                                        await new Promise(resolve => setTimeout(resolve, 200));
+                                        const cardResponse = await fetch(`https://api.scryfall.com/cards/${scryfallId}`);
+                                        if (cardResponse.ok) {
+                                            const cardData = await cardResponse.json();
+                                            preferredColors = cardData.colors || [];
+                                            console.log(`Extracted colors for ${cardName} from URL: ${preferredColors}`);
+                                        }
+                                    } catch (e) {
+                                        console.log('Could not extract colors from Scryfall URL:', e);
+                                    }
+                                }
+                            }
+                            
                             // Fetch card data from Scryfall
-                            const scryfallCard = await fetchCardByName(cardName);
+                            // If it's from a token deck, prefer token search and pass colors if available
+                            const scryfallCard = await fetchCardByName(cardName, isTokenDeck, preferredColors);
                             
                             if (scryfallCard) {
+                                // Use same token/emblem detection logic as Moxfield import
+                                const typeIsTokenOrEmblem = scryfallCard.type_line && (
+                                    scryfallCard.type_line.includes('Token') ||
+                                    scryfallCard.type_line.includes('Emblem') ||
+                                    scryfallCard.type_line === 'Card' ||
+                                    scryfallCard.type_line === 'Creature'
+                                );
+                                
+                                const hasCMC0 = scryfallCard.cmc === 0;
+                                const hasManaCost = scryfallCard.mana_cost && scryfallCard.mana_cost !== '';
+                                const isTokenOrEmblem = typeIsTokenOrEmblem && hasCMC0 && !hasManaCost;
+                                
                                 // Check if this is close to commander position (first deck, near position 0)
                                 const isLikelyCommander = obj.Transform?.posX < 3 && obj.Transform?.posX > -3 
                                     && obj.ContainedObjects.length === 1;
@@ -3260,7 +3299,19 @@
                                         cmc: scryfallCard.cmc || 0,
                                         colors: scryfallCard.colors || []
                                     };
+                                } else if (isTokenOrEmblem) {
+                                    // Add to tokens array
+                                    deck.tokens.push({
+                                        id: scryfallCard.id,
+                                        name: scryfallCard.name,
+                                        type_line: scryfallCard.type_line,
+                                        image_url: faceURL, // Use the custom art from JSON
+                                        scryfall_uri: scryfallCard.scryfall_uri,
+                                        cmc: scryfallCard.cmc || 0,
+                                        colors: scryfallCard.colors || []
+                                    });
                                 } else {
+                                    // Add to main deck
                                     deck.cards.push({
                                         id: scryfallCard.id,
                                         name: scryfallCard.name,
