@@ -1965,12 +1965,27 @@
                 const totalItems = commanderCount + mainboardCount + tokenCount;
                 let processedItems = 0;
 
+                // Batch-fetch commander + mainboard names upfront (tokens need special layout:token
+                // searches so they are handled individually below).
+                const nonTokenNames = [];
+                if (data.commanders) {
+                    Object.keys(data.commanders).forEach(n => { if (n && typeof n === 'string') nonTokenNames.push(n); });
+                }
+                if (data.mainboard) {
+                    Object.keys(data.mainboard).forEach(n => { if (n && typeof n === 'string') nonTokenNames.push(n); });
+                }
+                updateProgress(0, totalItems, '- Pre-fetching card data...');
+                const cardCache = await fetchCardsByNameBatch(nonTokenNames);
+
                 // Process commander
                 if (data.commanders) {
                     for (const [cardName, cardData] of Object.entries(data.commanders)) {
                         if (!cardName || typeof cardName !== 'string') continue;
-                        
-                        const scryfallCard = await fetchCardByName(cardName);
+
+                        const cacheKey = cardName.toLowerCase().trim();
+                        const scryfallCard = cardCache.has(cacheKey)
+                            ? cardCache.get(cacheKey)
+                            : await fetchCardByName(cardName);
                         if (scryfallCard) {
                             deck.commander = {
                                 id: scryfallCard.id,
@@ -1993,7 +2008,10 @@
                     for (const [cardName, cardData] of Object.entries(data.mainboard)) {
                         if (!cardName || typeof cardName !== 'string') continue;
                         
-                        const scryfallCard = await fetchCardByName(cardName);
+                        const cacheKey = cardName.toLowerCase().trim();
+                        const scryfallCard = cardCache.has(cacheKey)
+                            ? cardCache.get(cacheKey)
+                            : await fetchCardByName(cardName);
                         if (scryfallCard) {
                             const quantity = cardData.quantity || 1;
                             for (let i = 0; i < quantity; i++) {
@@ -2016,39 +2034,29 @@
                 // Process tokens
                 if (data.tokens) {
                     console.log('Moxfield tokens found:', Object.keys(data.tokens).length);
-                    console.log('Token data sample:', Object.entries(data.tokens)[0]);
                     console.log('All token names:', Object.entries(data.tokens).map(([id, data]) => data?.card?.name || data?.name || id));
                     
+                    // Collect token entries for batch fetching
+                    const tokenEntries = [];
                     for (const [cardId, cardData] of Object.entries(data.tokens)) {
-                        // Token data might be structured differently - check if it has a card.name
                         const cardName = cardData?.card?.name || cardData?.name || cardId;
                         const moxfieldColors = cardData?.card?.colors || cardData?.colors || [];
-                        
-                        console.log('=== Token Debug ===');
-                        console.log('Card ID:', cardId);
-                        console.log('Card Name:', cardName);
-                        console.log('Full cardData:', JSON.stringify(cardData, null, 2));
-                        console.log('Extracted colors:', moxfieldColors);
-                        console.log('==================');
-                        
-                        if (!cardName || typeof cardName !== 'string' || cardName.trim() === '') {
-                            console.log('Skipping invalid token name:', cardId, cardData);
-                            continue;
+                        if (cardName && typeof cardName === 'string' && cardName.trim() !== '') {
+                            tokenEntries.push({ name: cardName, colors: moxfieldColors, cardId, cardData });
                         }
-                        
-                        console.log('Fetching token:', cardName, 'Colors from Moxfield:', moxfieldColors);
-                        const scryfallCard = await fetchCardByName(cardName, true, moxfieldColors); // Pass colors to find correct variant
+                    }
+
+                    // Batch-fetch all tokens in ~1-2 requests instead of 2×N individual ones
+                    updateProgress(processedItems, totalItems, '- Pre-fetching token data…');
+                    const tokenCache = await fetchTokensByNameBatch(tokenEntries);
+
+                    for (const { name: cardName, colors: moxfieldColors, cardId, cardData } of tokenEntries) {
+                        console.log('Resolving token:', cardName, 'Colors from Moxfield:', moxfieldColors);
+                        const scryfallCard = await resolveTokenFromCache(cardName, moxfieldColors, tokenCache);
                         if (scryfallCard) {
                             console.log('Scryfall returned:', scryfallCard.name, '-', scryfallCard.type_line);
                             
                             // Only add if it's actually a token or emblem
-                            // Real tokens/emblems on Scryfall have specific patterns:
-                            // 1. Type includes "Token" (e.g., "Token Creature — Human")
-                            // 2. Type includes "Emblem" (e.g., "Emblem — Ob Nixilis")
-                            // 3. Type is exactly "Card" (some older tokens)
-                            // 4. Type is exactly "Creature" (some tokens like Morph)
-                            // AND they always have CMC = 0
-                            
                             const typeIsTokenOrEmblem = scryfallCard.type_line && (
                                 scryfallCard.type_line.includes('Token') ||
                                 scryfallCard.type_line.includes('Emblem') ||
@@ -2057,10 +2065,7 @@
                             );
                             
                             const hasCMC0 = scryfallCard.cmc === 0;
-                            
-                            // Additional safety: if it has a mana_cost field (even if 0), it's probably not a token/emblem
                             const hasManaCost = scryfallCard.mana_cost && scryfallCard.mana_cost !== '';
-                            
                             const isTokenOrEmblem = typeIsTokenOrEmblem && hasCMC0 && !hasManaCost;
                             
                             if (isTokenOrEmblem) {
@@ -2070,7 +2075,6 @@
                                 
                                 // If no direct image and it's a double-faced card
                                 if (!imageUrl && scryfallCard.card_faces) {
-                                    // First, try to match by color if we have moxfield colors
                                     let matchingFace = null;
                                     
                                     if (moxfieldColors && moxfieldColors.length > 0) {
@@ -2079,26 +2083,20 @@
                                             const faceColors = (face.colors || []).sort().join('');
                                             return faceColors === sortedMoxColors;
                                         });
-                                        console.log('Trying to match face by color:', sortedMoxColors, 'Found:', matchingFace ? matchingFace.name : 'none');
                                     }
                                     
-                                    // Fallback: match by name
                                     if (!matchingFace) {
                                         matchingFace = scryfallCard.card_faces.find(face => 
                                             face.name.toLowerCase() === cardName.toLowerCase()
                                         );
-                                        console.log('Trying to match face by name:', cardName, 'Found:', matchingFace ? matchingFace.name : 'none');
                                     }
                                     
                                     if (matchingFace) {
                                         imageUrl = matchingFace.image_uris?.normal;
                                         actualColors = matchingFace.colors || [];
-                                        console.log('Using matching face:', matchingFace.name, 'Colors:', actualColors);
                                     } else {
-                                        // Default to first face if no match
                                         imageUrl = scryfallCard.card_faces[0]?.image_uris?.normal;
                                         actualColors = scryfallCard.card_faces[0]?.colors || [];
-                                        console.log('No matching face found, using first face with colors:', actualColors);
                                     }
                                 }
                                 
@@ -2107,7 +2105,6 @@
                                 }
                                 
                                 // Only add unique tokens/emblems
-                                // Check for duplicates considering color identity
                                 const exists = deck.tokens.find(t => 
                                     t.name === scryfallCard.name && 
                                     JSON.stringify(t.colors.sort()) === JSON.stringify(actualColors.sort())
@@ -2148,7 +2145,11 @@
 
             } catch (error) {
                 console.error('Import error:', error);
-                showNotification(error.message || 'Failed to import deck. Please try again.', 'error', 'Import Failed', 6000);
+                if (error.isScryfallDown) {
+                    showNotification(error.message, 'error', 'Scryfall Error', 8000);
+                } else {
+                    showNotification(error.message || 'Failed to import deck. Please try again.', 'error', 'Import Failed', 6000);
+                }
             } finally {
                 hideLoadingOverlay();
             }
@@ -2164,6 +2165,11 @@
             let lastResponse;
             for (let attempt = 0; attempt <= maxRetries; attempt++) {
                 lastResponse = await fetch(url, options);
+                if (lastResponse.status === 503) {
+                    const err = new Error("Ooopsie, seems like Scryfall is having issues :/");
+                    err.isScryfallDown = true;
+                    throw err;
+                }
                 if (lastResponse.status !== 429) return lastResponse;
                 if (attempt < maxRetries) {
                     const delay = Math.pow(2, attempt) * 1000; // 1 s, 2 s, 4 s
@@ -2207,6 +2213,111 @@
             }
 
             return cardMap;
+        }
+
+        // Batch-fetches tokens using Scryfall's /cards/search endpoint with OR queries.
+        // tokenEntries: Array of { name: string, colors: string[] }
+        // Returns a Map of "lowercased_name|sortedColors" -> card object.
+        // Tokens not found via batch are retried individually as a fallback.
+        async function fetchTokensByNameBatch(tokenEntries) {
+            const tokenMap = new Map();
+            if (!tokenEntries || tokenEntries.length === 0) return tokenMap;
+
+            // De-duplicate by name (we'll handle color matching from results)
+            const uniqueNames = [...new Set(
+                tokenEntries
+                    .map(e => e.name)
+                    .filter(n => n && typeof n === 'string' && n.trim())
+                    .map(n => n.trim())
+            )];
+
+            if (uniqueNames.length === 0) return tokenMap;
+
+            console.log(`Batch token fetch: ${uniqueNames.length} unique token names`);
+
+            // Scryfall search queries have a length limit. We'll batch names into groups
+            // where the query stays reasonable (roughly 10 names per search to keep URL safe).
+            const NAMES_PER_SEARCH = 10;
+
+            for (let i = 0; i < uniqueNames.length; i += NAMES_PER_SEARCH) {
+                const batch = uniqueNames.slice(i, i + NAMES_PER_SEARCH);
+                // Build OR query: (!"Name1" OR !"Name2") layout:token
+                const orClause = batch.map(n => `!"${n}"`).join(' OR ');
+                const query = `(${orClause}) layout:token`;
+
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                try {
+                    let page = 1;
+                    let hasMore = true;
+
+                    while (hasMore) {
+                        const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}&page=${page}&unique=prints`;
+                        const response = await scryfallFetchWithRetry(url);
+
+                        if (!response.ok) {
+                            console.warn(`Token batch search failed (status ${response.status}) for batch starting at index ${i}`);
+                            break;
+                        }
+
+                        const data = await response.json();
+                        if (data.data) {
+                            for (const card of data.data) {
+                                const cardColors = (card.colors || []).sort().join('');
+                                const key = `${card.name.toLowerCase()}|${cardColors}`;
+                                // Keep first match per name+color combo
+                                if (!tokenMap.has(key)) {
+                                    tokenMap.set(key, card);
+                                }
+                                // Also store a name-only key as fallback (first result for that name)
+                                const nameKey = `${card.name.toLowerCase()}|*`;
+                                if (!tokenMap.has(nameKey)) {
+                                    tokenMap.set(nameKey, card);
+                                }
+                            }
+                        }
+
+                        hasMore = data.has_more === true;
+                        if (hasMore) {
+                            page++;
+                            await new Promise(resolve => setTimeout(resolve, 100));
+                        }
+                    }
+                } catch (e) {
+                    if (e.isScryfallDown) throw e;
+                    console.warn('Token batch search error:', e);
+                }
+            }
+
+            console.log(`Batch token fetch complete: ${tokenMap.size} entries cached`);
+            return tokenMap;
+        }
+
+        // Looks up a token from the batch cache, falling back to individual fetch.
+        // tokenCache: Map from fetchTokensByNameBatch
+        // Returns the card object or null.
+        async function resolveTokenFromCache(name, colors, tokenCache) {
+            if (!name || typeof name !== 'string') return null;
+
+            const sortedColors = (colors || []).sort().join('');
+
+            // Try exact name+color match first
+            const exactKey = `${name.toLowerCase().trim()}|${sortedColors}`;
+            if (tokenCache.has(exactKey)) {
+                console.log(`Token cache hit (exact): ${name} [${sortedColors}]`);
+                return tokenCache.get(exactKey);
+            }
+
+            // Try name-only fallback
+            const nameKey = `${name.toLowerCase().trim()}|*`;
+            if (tokenCache.has(nameKey)) {
+                console.log(`Token cache hit (name-only): ${name}`);
+                return tokenCache.get(nameKey);
+            }
+
+            // Cache miss – fall back to individual fetch
+            console.log(`Token cache miss, individual fetch: ${name}`);
+            return await fetchCardByName(name, true, colors);
         }
 
         async function fetchCardByName(name, preferToken = false, preferredColors = null) {
@@ -3252,7 +3363,11 @@
             } catch (error) {
                 hideLoadingOverlay();
                 console.error('JSON import error:', error);
-                showNotification('Failed to import JSON file. Please check the file format.', 'error');
+                if (error.isScryfallDown) {
+                    showNotification(error.message, 'error', 'Scryfall Error', 8000);
+                } else {
+                    showNotification('Failed to import JSON file. Please check the file format.', 'error');
+                }
             }
         }
         
@@ -3286,13 +3401,21 @@
             });
 
             // Pre-collect card names from non-token decks and standalone Cards for batch fetching.
-            // Token decks need special Scryfall searches so they are handled individually below.
+            // Also collect token names for batch token search.
             const nonTokenNames = [];
+            const tokenDeckEntries = []; // { name, colors: null, obj, containedObj }
             for (const obj of objectStates) {
                 if (obj.Name === 'DeckCustom' && obj.ContainedObjects) {
                     const isTokenDeck = obj.Transform?.posX > 4;
                     if (!isTokenDeck) {
                         obj.ContainedObjects.forEach(c => { if (c.Nickname) nonTokenNames.push(c.Nickname); });
+                    } else {
+                        // Collect token entries for batch search
+                        obj.ContainedObjects.forEach(c => {
+                            if (c.Nickname) {
+                                tokenDeckEntries.push({ name: c.Nickname, colors: [], obj, containedObj: c });
+                            }
+                        });
                     }
                 } else if (obj.Name === 'Card' && obj.Nickname) {
                     nonTokenNames.push(obj.Nickname);
@@ -3302,6 +3425,67 @@
             // Batch fetch non-token cards (up to 75 per request) to stay within rate limits
             updateProgress(0, totalCards, '- Pre-fetching card data…');
             const cardCache = await fetchCardsByNameBatch(nonTokenNames);
+
+            // Batch fetch tokens via search (layout:token) to reduce API calls
+            let tokenCache = new Map();
+            if (tokenDeckEntries.length > 0) {
+                updateProgress(0, totalCards, '- Pre-fetching token data…');
+
+                // If tokens have Scryfall URLs, batch-fetch by ID to get colors first
+                const idFetchPromises = [];
+                for (const entry of tokenDeckEntries) {
+                    const cardId = entry.containedObj.CardID;
+                    const deckKey = String(Math.floor(cardId / 100));
+                    const faceURL = entry.obj.CustomDeck?.[deckKey]?.FaceURL;
+                    if (faceURL && faceURL.includes('scryfall.io')) {
+                        const scryfallIdMatch = faceURL.match(/\/([a-f0-9-]{36})\.jpg/);
+                        if (scryfallIdMatch) {
+                            entry._scryfallId = scryfallIdMatch[1];
+                        }
+                    }
+                }
+
+                // Batch-fetch Scryfall IDs via /cards/collection to get colors
+                const idsToFetch = tokenDeckEntries
+                    .filter(e => e._scryfallId)
+                    .map(e => e._scryfallId);
+                const uniqueIds = [...new Set(idsToFetch)];
+                const idColorMap = new Map();
+
+                for (let i = 0; i < uniqueIds.length; i += 75) {
+                    const batch = uniqueIds.slice(i, i + 75);
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    try {
+                        const response = await scryfallFetchWithRetry(
+                            'https://api.scryfall.com/cards/collection',
+                            {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ identifiers: batch.map(id => ({ id })) })
+                            }
+                        );
+                        if (response.ok) {
+                            const data = await response.json();
+                            (data.data || []).forEach(card => {
+                                idColorMap.set(card.id, card.colors || []);
+                            });
+                        }
+                    } catch (e) {
+                        if (e.isScryfallDown) throw e;
+                        console.warn('Token ID batch fetch failed:', e);
+                    }
+                }
+
+                // Assign fetched colors back to entries
+                for (const entry of tokenDeckEntries) {
+                    if (entry._scryfallId && idColorMap.has(entry._scryfallId)) {
+                        entry.colors = idColorMap.get(entry._scryfallId);
+                    }
+                }
+
+                // Now batch-fetch token cards by name
+                tokenCache = await fetchTokensByNameBatch(tokenDeckEntries);
+            }
 
             // Process each object state
             for (const obj of objectStates) {
@@ -3319,37 +3503,34 @@
                         const faceURL = obj.CustomDeck[deckKey]?.FaceURL;
                         
                         if (cardName && faceURL) {
-                            // For tokens, try to extract color info from the Scryfall URL
+                            // For tokens, get colors from pre-fetched data
                             let preferredColors = null;
 
-                            if (isTokenDeck && faceURL.includes('scryfall.io')) {
-                                // Extract Scryfall card ID from URL like:
-                                // https://cards.scryfall.io/normal/front/c/2/c2963ce1-f9d8-437a-9489-e0913a8b8d26.jpg
+                            if (isTokenDeck) {
+                                // Look up colors from the batch-fetched ID map
                                 const scryfallIdMatch = faceURL.match(/\/([a-f0-9-]{36})\.jpg/);
                                 if (scryfallIdMatch) {
-                                    const scryfallId = scryfallIdMatch[1];
-                                    try {
-                                        await new Promise(resolve => setTimeout(resolve, 100));
-                                        const cardResponse = await scryfallFetchWithRetry(
-                                            `https://api.scryfall.com/cards/${scryfallId}`
-                                        );
-                                        if (cardResponse.ok) {
-                                            const cardData = await cardResponse.json();
-                                            preferredColors = cardData.colors || [];
-                                            console.log(`Extracted colors for ${cardName} from URL: ${preferredColors}`);
-                                        }
-                                    } catch (e) {
-                                        console.log('Could not extract colors from Scryfall URL:', e);
+                                    // Colors were already fetched in the batch above
+                                    const entry = tokenDeckEntries.find(e => 
+                                        e._scryfallId === scryfallIdMatch[1] && e.containedObj === containedObj
+                                    );
+                                    if (entry) {
+                                        preferredColors = entry.colors;
+                                        console.log(`Using pre-fetched colors for ${cardName}: ${preferredColors}`);
                                     }
                                 }
                             }
 
-                            // Use pre-fetched cache for non-token cards; fall back to individual fetch
-                            // for token decks (which need special layout:token search) and cache misses.
+                            // Use pre-fetched cache for non-token cards; use token cache for tokens
                             const cacheKey = cardName.toLowerCase().trim();
-                            const scryfallCard = (!isTokenDeck && cardCache.has(cacheKey))
-                                ? cardCache.get(cacheKey)
-                                : await fetchCardByName(cardName, isTokenDeck, preferredColors);
+                            let scryfallCard;
+                            if (!isTokenDeck && cardCache.has(cacheKey)) {
+                                scryfallCard = cardCache.get(cacheKey);
+                            } else if (isTokenDeck) {
+                                scryfallCard = await resolveTokenFromCache(cardName, preferredColors, tokenCache);
+                            } else {
+                                scryfallCard = await fetchCardByName(cardName, false, null);
+                            }
                             
                             if (scryfallCard) {
                                 // Use same token/emblem detection logic as Moxfield import
