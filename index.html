@@ -2826,6 +2826,10 @@
                     if (m !== editMenu) m.classList.remove('show');
                 });
                 editMenu.classList.toggle('show');
+                // Hide the zoom preview when dropdown opens
+                if (editMenu.classList.contains('show')) {
+                    hideCardPreview();
+                }
             });
 
             // Commander option
@@ -2866,9 +2870,22 @@
             });
 
             // Hover preview
-            div.addEventListener('mouseenter', (e) => showCardPreview(card.image_url, e));
-            div.addEventListener('mousemove', (e) => moveCardPreview(e));
-            div.addEventListener('mouseleave', hideCardPreview);
+            div.addEventListener('mouseenter', (e) => {
+                // Don't show preview if any edit menu is open
+                if (!document.querySelector('.deck-card-edit-menu.show')) {
+                    showCardPreview(card.image_url, e);
+                }
+            });
+            div.addEventListener('mousemove', (e) => {
+                if (!document.querySelector('.deck-card-edit-menu.show')) {
+                    moveCardPreview(e);
+                }
+            });
+            div.addEventListener('mouseleave', () => {
+                // Close edit dropdown when mouse leaves the card
+                editMenu.classList.remove('show');
+                hideCardPreview();
+            });
 
             return div;
         }
