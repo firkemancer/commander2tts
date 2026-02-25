@@ -3618,6 +3618,8 @@
                 }
             };
 
+            const objectStates = [mainDeckObj];
+
             // Create commander object(s) (separate cards, not in deck)
             deck.commanders.forEach((commander, cmdIndex) => {
                 const commanderObj = {
@@ -3662,9 +3664,7 @@
                 objectStates.push(commanderObj);
             });
 
-            const objectStates = [mainDeckObj];
-
-            // Create commander object(s) (separate cards, not in deck)
+            // Create token deck if tokens exist
             if (deck.tokens && deck.tokens.length > 0) {
                 const tokenContainedObjects = [];
                 const tokenCustomDeck = {};
