@@ -1619,6 +1619,12 @@
             return decks[currentDeckIndex];
         }
 
+        function isDeckEmpty(deck) {
+            return deck.cards.length === 0 &&
+                   (!deck.commander || deck.commander === null) &&
+                   (!deck.tokens || deck.tokens.length === 0);
+        }
+
         function updateDeckSelector() {
             const selector = document.getElementById('deckSelector');
             selector.innerHTML = '';
@@ -1942,21 +1948,28 @@
                     throw new Error('Could not fetch deck data. Please try:\n\n1. Use a browser extension like "CORS Unblock"\n2. Try a different deck\n3. Export your deck list as text and add cards manually');
                 }
 
-                // Create a new deck for the import
-                const newDeck = createNewDeck();
-                newDeck.cards = [];
-                newDeck.tokens = [];
-                newDeck.commander = null;
+                // Reuse current deck if it's empty, otherwise create a new one
+                let deck;
+                const currentDeck = getCurrentDeck();
+                if (currentDeck && isDeckEmpty(currentDeck)) {
+                    deck = currentDeck;
+                    deck.cards = [];
+                    deck.tokens = [];
+                    deck.commander = null;
+                } else {
+                    const newDeck = createNewDeck();
+                    newDeck.cards = [];
+                    newDeck.tokens = [];
+                    newDeck.commander = null;
+                    decks.push(newDeck);
+                    currentDeckIndex = decks.length - 1;
+                    deck = newDeck;
+                }
 
                 // Set deck name from Moxfield
                 if (data.name) {
-                    newDeck.name = data.name;
+                    deck.name = data.name;
                 }
-
-                // Add the new deck to the decks array
-                decks.push(newDeck);
-                currentDeckIndex = decks.length - 1;
-                const deck = newDeck;
 
                 // Calculate total items to process
                 const commanderCount = data.commanders ? Object.keys(data.commanders).length : 0;
@@ -3403,16 +3416,23 @@
         }
         
         async function importFromTTSJson(ttsJson) {
-            // Create a new deck for the import
-            const newDeck = createNewDeck();
-            newDeck.cards = [];
-            newDeck.tokens = [];
-            newDeck.commander = null;
-            
-            // Add the new deck to the decks array
-            decks.push(newDeck);
-            currentDeckIndex = decks.length - 1;
-            const deck = newDeck;
+            // Reuse current deck if it's empty, otherwise create a new one
+            let deck;
+            const currentDeck = getCurrentDeck();
+            if (currentDeck && isDeckEmpty(currentDeck)) {
+                deck = currentDeck;
+                deck.cards = [];
+                deck.tokens = [];
+                deck.commander = null;
+            } else {
+                const newDeck = createNewDeck();
+                newDeck.cards = [];
+                newDeck.tokens = [];
+                newDeck.commander = null;
+                decks.push(newDeck);
+                currentDeckIndex = decks.length - 1;
+                deck = newDeck;
+            }
             
             if (!ttsJson.ObjectStates || !Array.isArray(ttsJson.ObjectStates)) {
                 throw new Error('Invalid TTS JSON format');
