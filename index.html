@@ -607,12 +607,6 @@
             background: var(--hover);
         }
 
-        .deck-card-edit-menu-item.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            pointer-events: none;
-        }
-
         .deck-card-edit-menu-item .material-icons {
             font-size: 18px;
         }
@@ -2872,30 +2866,24 @@
             // Determine commander menu option
             let commanderLabel = '';
             let commanderIcon = '';
-            let commanderDisabled = '';
+            let showCommanderOption = true;
             
             if (isCommander) {
                 commanderLabel = 'Remove Commander';
                 commanderIcon = 'person_remove';
-                commanderDisabled = '';
             } else if (!isEligibleCommander) {
-                commanderLabel = 'Set Commander';
-                commanderIcon = 'person_add';
-                commanderDisabled = ' disabled';
+                showCommanderOption = false;
             } else if (deck.commanders.length === 0) {
                 commanderLabel = 'Set Commander';
                 commanderIcon = 'person_add';
-                commanderDisabled = '';
             } else if (deck.commanders.length === 1 && cardHasPartner && hasPartner(deck.commanders[0]) && partnersCompatible(card, deck.commanders[0])) {
                 // Can add as partner
                 commanderLabel = 'Add as Partner';
                 commanderIcon = 'group_add';
-                commanderDisabled = '';
             } else {
                 // Has commander(s) but can't partner — offer replace
                 commanderLabel = 'Replace Commander';
                 commanderIcon = 'swap_horiz';
-                commanderDisabled = '';
             }
 
             div.innerHTML = `
@@ -2907,10 +2895,10 @@
                 <button class="deck-card-alt-art" title="Change artwork"><span class="material-icons">image_search</span></button>
                 <button class="deck-card-edit" title="Edit"><span class="material-icons">more_vert</span></button>
                 <div class="deck-card-edit-menu">
-                    <div class="deck-card-edit-menu-item commander-option${commanderDisabled}" data-action="commander">
+                    ${showCommanderOption ? `<div class="deck-card-edit-menu-item commander-option" data-action="commander">
                         <span class="material-icons">${commanderIcon}</span>
                         <span>${commanderLabel}</span>
-                    </div>
+                    </div>` : ''}
                     ${!isCommander ? `<div class="deck-card-edit-menu-item" data-action="duplicate">
                         <span class="material-icons">content_copy</span>
                         <span>Duplicate Card</span>
