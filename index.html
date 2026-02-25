@@ -3761,12 +3761,26 @@
             showNotification('Deck cleared', 'info', 'Cleared', 3000);
         }
 
+        function sanitizeFilename(name) {
+            // Replace illegal filename characters with visually similar alternatives
+            return name
+                .replace(/\//g, '∕')   // slash → fraction slash
+                .replace(/\\/g, '⧵')   // backslash → reverse solidus operator
+                .replace(/:/g, '꞉')    // colon → modifier letter colon
+                .replace(/\*/g, '✱')   // asterisk → heavy asterisk
+                .replace(/\?/g, '？')  // question mark → fullwidth question mark
+                .replace(/"/g, '＂')   // double quote → fullwidth quotation mark
+                .replace(/</g, '﹤')   // less than → small less-than sign
+                .replace(/>/g, '﹥')   // greater than → small greater-than sign
+                .replace(/\|/g, '｜')  // pipe → fullwidth vertical line
+                .trim();
+        }
+
         function updateFilename() {
             const deck = getCurrentDeck();
-            if (deck.commanders && deck.commanders.length > 0) {
-                const names = deck.commanders.map(c => c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')).join('-and-');
-                document.getElementById('filenameInput').value = `${names}-commander.json`;
-            }
+            const deckName = deck.name || 'commander-deck';
+            const safeName = sanitizeFilename(deckName);
+            document.getElementById('filenameInput').value = `${safeName}.json`;
         }
 
         function openExportModal() {
