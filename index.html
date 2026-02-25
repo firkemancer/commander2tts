@@ -534,9 +534,86 @@
             transform: scale(1.1);
         }
 
-        .deck-card-badges {
+        .deck-card-edit {
             position: absolute;
             bottom: 8px;
+            left: 8px;
+            background: rgba(155, 127, 212, 0.9);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        .deck-card-edit .material-icons {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .deck-card:hover .deck-card-edit {
+            opacity: 1;
+        }
+
+        .deck-card-edit:hover {
+            background: rgba(155, 127, 212, 1);
+            transform: scale(1.1);
+        }
+
+        .deck-card-edit-menu {
+            position: absolute;
+            bottom: 44px;
+            left: 8px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+            min-width: 200px;
+            display: none;
+            overflow: hidden;
+        }
+
+        .deck-card-edit-menu.show {
+            display: block;
+        }
+
+        .deck-card-edit-menu-item {
+            padding: 0.6rem 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .deck-card-edit-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .deck-card-edit-menu-item:hover {
+            background: var(--hover);
+        }
+
+        .deck-card-edit-menu-item .material-icons {
+            font-size: 18px;
+        }
+
+        .deck-card-badges {
+            position: absolute;
+            bottom: 48px;
             left: 8px;
             display: flex;
             gap: 4px;
@@ -1360,6 +1437,7 @@
             <div class="deck-section" id="commanderSection">
                 <div class="deck-header">
                     <h2 class="deck-title">Commander</h2>
+                    <div class="card-count" id="commanderCount" style="display: none;">0</div>
                 </div>
                 <div class="deck-list" id="commanderList">
                     <div class="empty-state">No commander selected</div>
@@ -1508,6 +1586,20 @@
         </div>
     </div>
 
+
+    <!-- Commander Confirmation Modal -->
+    <div class="modal" id="commanderConfirmModal">
+        <div class="modal-content" style="max-width: 400px; padding: 1.5rem;">
+            <button class="modal-close" id="closeCommanderConfirmModal">✕</button>
+            <h2 class="modal-title" style="font-size: 1.2rem; margin-bottom: 0.75rem;" id="commanderConfirmTitle">Commander</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;" id="commanderConfirmMessage"></p>
+            <div class="card-back-actions" style="gap: 1rem;">
+                <button class="card-back-btn" id="cancelCommanderBtn" style="background: var(--bg-secondary); color: var(--text-primary);">Cancel</button>
+                <button class="card-back-btn" id="confirmCommanderBtn" style="background: var(--accent); color: white;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Import Deck Modal -->
     <div class="modal" id="importDeckModal">
         <div class="modal-content" style="max-width: 600px;">
@@ -1588,10 +1680,18 @@
             const saved = localStorage.getItem('commander2tts_decks');
             if (saved) {
                 decks = JSON.parse(saved);
-                // Ensure all decks have cardBackUrl property
+                // Migrate and ensure all decks have required properties
                 decks.forEach(deck => {
                     if (!deck.cardBackUrl) {
                         deck.cardBackUrl = 'https://i.imgur.com/Hg8CwwU.jpeg';
+                    }
+                    // Migrate old single commander to commanders array
+                    if (deck.commander !== undefined && !deck.commanders) {
+                        deck.commanders = deck.commander ? [deck.commander] : [];
+                        delete deck.commander;
+                    }
+                    if (!deck.commanders) {
+                        deck.commanders = [];
                     }
                 });
             }
@@ -1608,7 +1708,7 @@
         function createNewDeck() {
             return {
                 name: `Deck ${decks.length + 1}`,
-                commander: null,
+                commanders: [],
                 cards: [],
                 tokens: [],
                 cardBackUrl: 'https://i.imgur.com/Hg8CwwU.jpeg'
@@ -1621,7 +1721,7 @@
 
         function isDeckEmpty(deck) {
             return deck.cards.length === 0 &&
-                   (!deck.commander || deck.commander === null) &&
+                   (!deck.commanders || deck.commanders.length === 0) &&
                    (!deck.tokens || deck.tokens.length === 0);
         }
 
@@ -1741,6 +1841,10 @@
                 if (!menuBtn.contains(e.target)) {
                     menu.classList.remove('show');
                 }
+                // Close any open edit dropdown menus on card thumbnails
+                if (!e.target.closest('.deck-card-edit') && !e.target.closest('.deck-card-edit-menu')) {
+                    document.querySelectorAll('.deck-card-edit-menu.show').forEach(m => m.classList.remove('show'));
+                }
             });
 
             document.getElementById('exportDeckBtn').addEventListener('click', openExportModal);
@@ -1751,6 +1855,16 @@
             document.getElementById('closeDeleteDeckModal').addEventListener('click', closeDeleteDeckModal);
             document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteDeckModal);
             document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDeleteDeck);
+
+            // Commander Confirmation Modal
+            document.getElementById('closeCommanderConfirmModal').addEventListener('click', closeCommanderConfirmModal);
+            document.getElementById('cancelCommanderBtn').addEventListener('click', closeCommanderConfirmModal);
+            document.getElementById('confirmCommanderBtn').addEventListener('click', confirmCommanderAction);
+            document.getElementById('commanderConfirmModal').addEventListener('click', (e) => {
+                if (e.target.id === 'commanderConfirmModal') {
+                    closeCommanderConfirmModal();
+                }
+            });
 
             // Rename Deck Modal
             document.getElementById('closeRenameDeckModal').addEventListener('click', closeRenameDeckModal);
@@ -1870,17 +1984,20 @@
                 image_url: imageUrl,
                 scryfall_uri: card.scryfall_uri,
                 cmc: card.cmc || 0,
-                colors: card.colors || []
+                colors: card.colors || [],
+                keywords: card.keywords || [],
+                legalities: card.legalities || {}
             };
 
-            // Check if it's a legendary creature for commander
-            const isLegendaryCreature = card.type_line.includes('Legendary') && card.type_line.includes('Creature');
-            
-            if (!deck.commander && isLegendaryCreature) {
-                // Automatically set as commander
-                deck.commander = cardData;
+            // Auto-set as commander if slot is available and card is eligible
+            if (canBeCommander(cardData) && deck.commanders.length === 0) {
+                deck.commanders.push(cardData);
                 updateFilename();
                 showNotification(`${card.name} set as Commander`, 'success');
+            } else if (canBeCommander(cardData) && deck.commanders.length === 1 && hasPartner(deck.commanders[0]) && hasPartner(cardData)) {
+                deck.commanders.push(cardData);
+                updateFilename();
+                showNotification(`${card.name} set as Partner Commander`, 'success');
             } else {
                 deck.cards.push(cardData);
             }
@@ -1888,6 +2005,77 @@
             saveDecks();
             updateDeckSelector();
             updateCardCounts();
+        }
+
+        // Check if a card can be a commander
+        function canBeCommander(card) {
+            // Must be legal in commander format
+            const commanderLegal = card.legalities && 
+                (card.legalities.commander === 'legal' || card.legalities.commander === 'restricted');
+            
+            // Check type line for legendary creature or planeswalker that can be commander
+            const isLegendaryCreature = card.type_line && 
+                card.type_line.includes('Legendary') && 
+                card.type_line.includes('Creature');
+            const isLegendaryPlaneswalker = card.type_line && 
+                card.type_line.includes('Legendary') && 
+                card.type_line.includes('Planeswalker');
+            
+            // Some cards explicitly say they can be your commander
+            const oracleAllows = card.type_line && (
+                card.type_line.includes('Background') // Backgrounds can be commander with "Choose a Background"
+            );
+
+            // Cards need to be commander-legal AND have an eligible type
+            // If we don't have legalities data (old cards), fall back to type check only
+            if (card.legalities && Object.keys(card.legalities).length > 0) {
+                return commanderLegal && (isLegendaryCreature || isLegendaryPlaneswalker || oracleAllows);
+            }
+            // Fallback for cards without legalities data (legacy imports)
+            return isLegendaryCreature || isLegendaryPlaneswalker;
+        }
+
+        // Check if a card has any partner-like keyword
+        function hasPartner(card) {
+            const keywords = card.keywords || [];
+            return keywords.some(kw => 
+                kw === 'Partner' || 
+                kw.startsWith('Partner with') ||
+                kw === 'Friends forever' ||
+                kw === 'Choose a Background' ||
+                kw === 'Background' ||
+                kw === "Doctor's companion"
+            );
+        }
+
+        // Check if two cards have compatible partner keywords
+        function partnersCompatible(cardA, cardB) {
+            const kwA = cardA.keywords || [];
+            const kwB = cardB.keywords || [];
+
+            // Generic "Partner" pairs with any other generic "Partner"
+            if (kwA.includes('Partner') && kwB.includes('Partner')) return true;
+
+            // "Partner with X" pairs only with the named card
+            const partnerWithA = kwA.find(k => k.startsWith('Partner with '));
+            const partnerWithB = kwB.find(k => k.startsWith('Partner with '));
+            if (partnerWithA && partnerWithA === `Partner with ${cardB.name}`) return true;
+            if (partnerWithB && partnerWithB === `Partner with ${cardA.name}`) return true;
+
+            // "Friends forever" pairs with any other "Friends forever"
+            if (kwA.includes('Friends forever') && kwB.includes('Friends forever')) return true;
+
+            // "Choose a Background" pairs with a "Background"
+            if (kwA.includes('Choose a Background') && kwB.includes('Background')) return true;
+            if (kwB.includes('Choose a Background') && kwA.includes('Background')) return true;
+
+            // "Doctor's companion" pairs with a Doctor (Time Lord Doctor creature)
+            // The Doctor doesn't have a specific keyword, so we check type
+            const isTimeLordDoctor = (c) => c.type_line && c.type_line.includes('Time Lord') && c.type_line.includes('Doctor');
+            if (kwA.includes("Doctor's companion") && isTimeLordDoctor(cardB)) return true;
+            if (kwB.includes("Doctor's companion") && isTimeLordDoctor(cardA)) return true;
+
+            return false;
         }
 
         // Moxfield import
@@ -1955,12 +2143,12 @@
                     deck = currentDeck;
                     deck.cards = [];
                     deck.tokens = [];
-                    deck.commander = null;
+                    deck.commanders = [];
                 } else {
                     const newDeck = createNewDeck();
                     newDeck.cards = [];
                     newDeck.tokens = [];
-                    newDeck.commander = null;
+                    newDeck.commanders = [];
                     decks.push(newDeck);
                     currentDeckIndex = decks.length - 1;
                     deck = newDeck;
@@ -1990,7 +2178,7 @@
                 updateProgress(0, totalItems, '- Pre-fetching card data...');
                 const cardCache = await fetchCardsByNameBatch(nonTokenNames);
 
-                // Process commander
+                // Process commander(s) - supports partner commanders
                 if (data.commanders) {
                     for (const [cardName, cardData] of Object.entries(data.commanders)) {
                         if (!cardName || typeof cardName !== 'string') continue;
@@ -2000,19 +2188,20 @@
                             ? cardCache.get(cacheKey)
                             : await fetchCardByName(cardName);
                         if (scryfallCard) {
-                            deck.commander = {
+                            deck.commanders.push({
                                 id: scryfallCard.id,
                                 name: scryfallCard.name,
                                 type_line: scryfallCard.type_line,
                                 image_url: scryfallCard.image_uris?.normal || scryfallCard.card_faces?.[0]?.image_uris?.normal,
                                 scryfall_uri: scryfallCard.scryfall_uri,
                                 cmc: scryfallCard.cmc || 0,
-                                colors: scryfallCard.colors || []
-                            };
+                                colors: scryfallCard.colors || [],
+                                keywords: scryfallCard.keywords || [],
+                                legalities: scryfallCard.legalities || {}
+                            });
                         }
                         processedItems++;
-                        updateProgress(processedItems, totalItems, '- Loading commander');
-                        break; // Only take first commander
+                        updateProgress(processedItems, totalItems, `- Loading commander(s) (${deck.commanders.length})`);
                     }
                 }
 
@@ -2035,7 +2224,9 @@
                                     image_url: scryfallCard.image_uris?.normal || scryfallCard.card_faces?.[0]?.image_uris?.normal,
                                     scryfall_uri: scryfallCard.scryfall_uri,
                                     cmc: scryfallCard.cmc || 0,
-                                    colors: scryfallCard.colors || []
+                                    colors: scryfallCard.colors || [],
+                                    keywords: scryfallCard.keywords || [],
+                                    legalities: scryfallCard.legalities || {}
                                 });
                             }
                         }
@@ -2430,11 +2621,13 @@
         function renderDeck() {
             const deck = getCurrentDeck();
             
-            // Render commander
+            // Render commander(s)
             const commanderList = document.getElementById('commanderList');
-            if (deck.commander) {
+            if (deck.commanders && deck.commanders.length > 0) {
                 commanderList.innerHTML = '';
-                commanderList.appendChild(createDeckCard(deck.commander, true, false, 1));
+                deck.commanders.forEach(cmd => {
+                    commanderList.appendChild(createDeckCard(cmd, true, false, 1));
+                });
             } else {
                 commanderList.innerHTML = '<div class="empty-state">No commander selected</div>';
             }
@@ -2467,7 +2660,8 @@
             }
 
             // Update count
-            document.getElementById('deckCount').textContent = `${deck.cards.length}/99`;
+            const expectedMain = (deck.commanders && deck.commanders.length === 2) ? 98 : 99;
+            document.getElementById('deckCount').textContent = `${deck.cards.length}/${expectedMain}`;
 
             // Render tokens
             const tokenSection = document.getElementById('tokenSection');
@@ -2492,8 +2686,18 @@
         function updateCardCounts() {
             const deck = getCurrentDeck();
             
-            // Update main count
-            document.getElementById('deckCount').textContent = `${deck.cards.length}/99`;
+            // Update commander count badge
+            const commanderCountEl = document.getElementById('commanderCount');
+            if (deck.commanders && deck.commanders.length > 0) {
+                commanderCountEl.textContent = deck.commanders.length;
+                commanderCountEl.style.display = '';
+            } else {
+                commanderCountEl.style.display = 'none';
+            }
+            
+            // Update main count (98 cards for partner, 99 otherwise)
+            const expectedMain = (deck.commanders && deck.commanders.length === 2) ? 98 : 99;
+            document.getElementById('deckCount').textContent = `${deck.cards.length}/${expectedMain}`;
             
             // Update token count
             if (deck.tokens && deck.tokens.length > 0) {
@@ -2655,6 +2859,33 @@
                 div.dataset.cardIds = JSON.stringify(ids);
             }
             
+            const deck = getCurrentDeck();
+            const isEligibleCommander = canBeCommander(card);
+            const cardHasPartner = hasPartner(card);
+            
+            // Determine commander menu option
+            let commanderLabel = '';
+            let commanderIcon = '';
+            let showCommanderOption = true;
+            
+            if (isCommander) {
+                commanderLabel = 'Remove Commander';
+                commanderIcon = 'person_remove';
+            } else if (!isEligibleCommander) {
+                showCommanderOption = false;
+            } else if (deck.commanders.length === 0) {
+                commanderLabel = 'Set Commander';
+                commanderIcon = 'person_add';
+            } else if (deck.commanders.length === 1 && cardHasPartner && hasPartner(deck.commanders[0]) && partnersCompatible(card, deck.commanders[0])) {
+                // Can add as partner
+                commanderLabel = 'Add as Partner';
+                commanderIcon = 'group_add';
+            } else {
+                // Has commander(s) but can't partner — offer replace
+                commanderLabel = 'Replace Commander';
+                commanderIcon = 'swap_horiz';
+            }
+
             div.innerHTML = `
                 <img src="${card.image_url}" alt="${card.name}" class="deck-card-image" loading="lazy">
                 <div class="deck-card-overlay"></div>
@@ -2662,7 +2893,55 @@
                 ${count > 1 ? `<div class="deck-card-count">×${count}</div>` : ''}
                 <button class="deck-card-remove" title="Remove card">×</button>
                 <button class="deck-card-alt-art" title="Change artwork"><span class="material-icons">image_search</span></button>
+                <button class="deck-card-edit" title="Edit"><span class="material-icons">more_vert</span></button>
+                <div class="deck-card-edit-menu">
+                    ${showCommanderOption ? `<div class="deck-card-edit-menu-item commander-option" data-action="commander">
+                        <span class="material-icons">${commanderIcon}</span>
+                        <span>${commanderLabel}</span>
+                    </div>` : ''}
+                    ${!isCommander ? `<div class="deck-card-edit-menu-item" data-action="duplicate">
+                        <span class="material-icons">content_copy</span>
+                        <span>Duplicate Card</span>
+                    </div>` : ''}
+                </div>
             `;
+
+            // Edit dropdown button
+            const editBtn = div.querySelector('.deck-card-edit');
+            const editMenu = div.querySelector('.deck-card-edit-menu');
+            
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close any other open edit menus
+                document.querySelectorAll('.deck-card-edit-menu.show').forEach(m => {
+                    if (m !== editMenu) m.classList.remove('show');
+                });
+                editMenu.classList.toggle('show');
+                // Hide the zoom preview when dropdown opens
+                if (editMenu.classList.contains('show')) {
+                    hideCardPreview();
+                }
+            });
+
+            // Commander option
+            const commanderOption = div.querySelector('.commander-option');
+            if (commanderOption && !commanderOption.classList.contains('disabled')) {
+                commanderOption.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editMenu.classList.remove('show');
+                    handleCommanderAction(card, isCommander, isToken, ids);
+                });
+            }
+
+            // Duplicate option
+            const duplicateOption = div.querySelector('[data-action="duplicate"]');
+            if (duplicateOption) {
+                duplicateOption.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editMenu.classList.remove('show');
+                    duplicateCard(card, isToken);
+                });
+            }
 
             const altArtBtn = div.querySelector('.deck-card-alt-art');
             altArtBtn.addEventListener('click', (e) => {
@@ -2682,9 +2961,22 @@
             });
 
             // Hover preview
-            div.addEventListener('mouseenter', (e) => showCardPreview(card.image_url, e));
-            div.addEventListener('mousemove', (e) => moveCardPreview(e));
-            div.addEventListener('mouseleave', hideCardPreview);
+            div.addEventListener('mouseenter', (e) => {
+                // Don't show preview if any edit menu is open
+                if (!document.querySelector('.deck-card-edit-menu.show')) {
+                    showCardPreview(card.image_url, e);
+                }
+            });
+            div.addEventListener('mousemove', (e) => {
+                if (!document.querySelector('.deck-card-edit-menu.show')) {
+                    moveCardPreview(e);
+                }
+            });
+            div.addEventListener('mouseleave', () => {
+                // Close edit dropdown when mouse leaves the card
+                editMenu.classList.remove('show');
+                hideCardPreview();
+            });
 
             return div;
         }
@@ -2693,7 +2985,7 @@
             const deck = getCurrentDeck();
             
             if (isCommander) {
-                deck.commander = null;
+                deck.commanders = deck.commanders.filter(c => c.id !== cardId);
                 updateFilename();
             } else if (isToken) {
                 deck.tokens = deck.tokens.filter(c => c.id !== cardId);
@@ -2707,6 +2999,123 @@
             saveDecks();
             updateDeckSelector();
             updateCardCounts();
+        }
+
+        // Commander action handler for edit dropdown
+        let pendingCommanderAction = null;
+
+        function handleCommanderAction(card, isCommander, isToken, ids) {
+            const deck = getCurrentDeck();
+
+            if (isCommander) {
+                // Remove this Commander
+                const isLastCommander = deck.commanders.length === 1;
+                showCommanderConfirmation(
+                    'Remove Commander',
+                    `Are you sure you want to remove "<span style="color: var(--accent); font-weight: bold;">${card.name}</span>" as commander?<br><br>The card will be moved back to the Main Deck.`,
+                    () => {
+                        deck.commanders = deck.commanders.filter(c => c.id !== card.id);
+                        deck.cards.push({ ...card });
+                        updateFilename();
+                        saveDecks();
+                        updateDeckSelector();
+                        renderDeck();
+                        showNotification(`${card.name} removed as commander`, 'success');
+                    }
+                );
+            } else if (deck.commanders.length === 1 && hasPartner(deck.commanders[0]) && hasPartner(card) && partnersCompatible(card, deck.commanders[0])) {
+                // Add as partner — no confirmation needed
+                if (isToken) {
+                    const idx = deck.tokens.findIndex(c => c.id === card.id);
+                    if (idx !== -1) deck.tokens.splice(idx, 1);
+                } else {
+                    const idx = deck.cards.findIndex(c => c.id === card.id);
+                    if (idx !== -1) deck.cards.splice(idx, 1);
+                }
+                deck.commanders.push({ ...card });
+                updateFilename();
+                saveDecks();
+                updateDeckSelector();
+                renderDeck();
+                showNotification(`${card.name} added as partner commander`, 'success');
+            } else if (deck.commanders.length > 0) {
+                // Replace Commander(s)
+                const commanderNames = deck.commanders.map(c => `"<span style="color: var(--accent); font-weight: bold;">${c.name}</span>"`).join(' and ');
+                showCommanderConfirmation(
+                    'Replace Commander',
+                    `Are you sure you want to replace ${commanderNames} with "<span style="color: var(--accent); font-weight: bold;">${card.name}</span>"?<br><br>The old commander(s) will be moved back to the Main Deck.`,
+                    () => {
+                        // Move old commanders back to main deck
+                        deck.commanders.forEach(cmd => deck.cards.push({ ...cmd }));
+                        deck.commanders = [];
+                        // Remove new commander from its current location
+                        if (isToken) {
+                            const idx = deck.tokens.findIndex(c => c.id === card.id);
+                            if (idx !== -1) deck.tokens.splice(idx, 1);
+                        } else {
+                            const idx = deck.cards.findIndex(c => c.id === card.id);
+                            if (idx !== -1) deck.cards.splice(idx, 1);
+                        }
+                        deck.commanders.push({ ...card });
+                        updateFilename();
+                        saveDecks();
+                        updateDeckSelector();
+                        renderDeck();
+                        showNotification(`${card.name} set as commander`, 'success');
+                    }
+                );
+            } else {
+                // Set Commander — no confirmation needed
+                if (isToken) {
+                    const idx = deck.tokens.findIndex(c => c.id === card.id);
+                    if (idx !== -1) deck.tokens.splice(idx, 1);
+                } else {
+                    const idx = deck.cards.findIndex(c => c.id === card.id);
+                    if (idx !== -1) deck.cards.splice(idx, 1);
+                }
+                deck.commanders.push({ ...card });
+                updateFilename();
+                saveDecks();
+                updateDeckSelector();
+                renderDeck();
+                showNotification(`${card.name} set as commander`, 'success');
+            }
+        }
+
+        function showCommanderConfirmation(title, message, onConfirm) {
+            document.getElementById('commanderConfirmTitle').textContent = title;
+            document.getElementById('commanderConfirmMessage').innerHTML = message;
+            pendingCommanderAction = onConfirm;
+            document.getElementById('commanderConfirmModal').classList.add('active');
+        }
+
+        function closeCommanderConfirmModal() {
+            document.getElementById('commanderConfirmModal').classList.remove('active');
+            pendingCommanderAction = null;
+        }
+
+        function confirmCommanderAction() {
+            if (pendingCommanderAction) {
+                pendingCommanderAction();
+                pendingCommanderAction = null;
+            }
+            closeCommanderConfirmModal();
+        }
+
+        function duplicateCard(card, isToken) {
+            const deck = getCurrentDeck();
+            const cardCopy = { ...card };
+            
+            if (isToken) {
+                deck.tokens.push(cardCopy);
+            } else {
+                deck.cards.push(cardCopy);
+            }
+            
+            saveDecks();
+            updateDeckSelector();
+            updateCardCounts();
+            showNotification(`Duplicated ${card.name}`, 'success');
         }
 
         function highlightCards(query) {
@@ -2791,7 +3200,8 @@
             const { card, isCommander, isToken } = currentAltArtCard;
 
             if (isCommander) {
-                deck.commander.image_url = imageUrl;
+                const cmd = deck.commanders.find(c => c.id === card.id);
+                if (cmd) cmd.image_url = imageUrl;
             } else if (isToken) {
                 // Update all tokens with matching ID
                 deck.tokens.forEach(t => {
@@ -3100,14 +3510,14 @@
         function exportToTTS() {
             const deck = getCurrentDeck();
             
-            if (!deck.commander) {
+            if (!deck.commanders || deck.commanders.length === 0) {
                 showNotification('Please select a commander before exporting', 'warning', 'Missing Commander');
                 return;
             }
 
-            if (deck.cards.length !== 99) {
-                // Show warning but allow export
-                showNotification(`Your deck has ${deck.cards.length} cards instead of 99. Exporting anyway...`, 'warning', 'Deck Size Warning', 5000);
+            const expectedMainDeck = deck.commanders.length === 2 ? 98 : 99;
+            if (deck.cards.length !== expectedMainDeck) {
+                showNotification(`Your deck has ${deck.cards.length} cards instead of ${expectedMainDeck}. Exporting anyway...`, 'warning', 'Deck Size Warning', 5000);
             }
 
             // Save the card back URL from the modal
@@ -3157,6 +3567,8 @@
                         scryfall_uri: card.scryfall_uri,
                         cmc: card.cmc || 0,
                         colors: card.colors || [],
+                        keywords: card.keywords || [],
+                        legalities: card.legalities || {},
                         commander: false,
                         other: false
                     },
@@ -3206,48 +3618,53 @@
                 }
             };
 
-            // Create commander object (separate card, not in deck)
-            const commanderObj = {
-                CardID: 100,
-                Name: "Card",
-                Nickname: deck.commander.name,
-                C2TTSData: {
-                    id: deck.commander.id,
-                    name: deck.commander.name,
-                    type_line: deck.commander.type_line,
-                    scryfall_uri: deck.commander.scryfall_uri,
-                    cmc: deck.commander.cmc || 0,
-                    colors: deck.commander.colors || [],
-                    commander: true,
-                    other: false
-                },
-                Transform: {
-                    posX: 2.2,
-                    posY: 1,
-                    posZ: 0,
-                    rotX: 0,
-                    rotY: 180,
-                    rotZ: 0,
-                    scaleX: 1,
-                    scaleY: 1,
-                    scaleZ: 1
-                },
-                DeckIDs: [100],
-                CustomDeck: {
-                    "1": {
-                        FaceURL: deck.commander.image_url,
-                        BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
-                        NumHeight: 1,
-                        NumWidth: 1,
-                        BackIsHidden: true,
-                        UniqueBack: false
+            // Create commander object(s) (separate cards, not in deck)
+            deck.commanders.forEach((commander, cmdIndex) => {
+                const commanderObj = {
+                    CardID: 100,
+                    Name: "Card",
+                    Nickname: commander.name,
+                    C2TTSData: {
+                        id: commander.id,
+                        name: commander.name,
+                        type_line: commander.type_line,
+                        scryfall_uri: commander.scryfall_uri,
+                        cmc: commander.cmc || 0,
+                        colors: commander.colors || [],
+                        keywords: commander.keywords || [],
+                        legalities: commander.legalities || {},
+                        commander: true,
+                        other: false
+                    },
+                    Transform: {
+                        posX: 2.2 + (cmdIndex * 2.2),
+                        posY: 1,
+                        posZ: 0,
+                        rotX: 0,
+                        rotY: 180,
+                        rotZ: 0,
+                        scaleX: 1,
+                        scaleY: 1,
+                        scaleZ: 1
+                    },
+                    DeckIDs: [100],
+                    CustomDeck: {
+                        "1": {
+                            FaceURL: commander.image_url,
+                            BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
+                            NumHeight: 1,
+                            NumWidth: 1,
+                            BackIsHidden: true,
+                            UniqueBack: false
+                        }
                     }
-                }
-            };
+                };
+                objectStates.push(commanderObj);
+            });
 
-            const objectStates = [mainDeckObj, commanderObj];
+            const objectStates = [mainDeckObj];
 
-            // Create token deck if tokens exist
+            // Create commander object(s) (separate cards, not in deck)
             if (deck.tokens && deck.tokens.length > 0) {
                 const tokenContainedObjects = [];
                 const tokenCustomDeck = {};
@@ -3301,7 +3718,7 @@
                     DeckIDs: tokenDeckIDs,
                     CustomDeck: tokenCustomDeck,
                     Transform: {
-                        posX: 4.4,
+                        posX: 2.2 + (deck.commanders.length * 2.2),
                         posY: 1,
                         posZ: 0,
                         rotX: 0,
@@ -3327,12 +3744,12 @@
             
             // Store backup for undo
             const backup = {
-                commander: deck.commander,
+                commanders: [...deck.commanders],
                 cards: [...deck.cards],
                 tokens: [...deck.tokens]
             };
             
-            deck.commander = null;
+            deck.commanders = [];
             deck.cards = [];
             deck.tokens = [];
             
@@ -3346,9 +3763,9 @@
 
         function updateFilename() {
             const deck = getCurrentDeck();
-            if (deck.commander) {
-                const sanitized = deck.commander.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-                document.getElementById('filenameInput').value = `${sanitized}-commander.json`;
+            if (deck.commanders && deck.commanders.length > 0) {
+                const names = deck.commanders.map(c => c.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')).join('-and-');
+                document.getElementById('filenameInput').value = `${names}-commander.json`;
             }
         }
 
@@ -3423,12 +3840,12 @@
                 deck = currentDeck;
                 deck.cards = [];
                 deck.tokens = [];
-                deck.commander = null;
+                deck.commanders = [];
             } else {
                 const newDeck = createNewDeck();
                 newDeck.cards = [];
                 newDeck.tokens = [];
-                newDeck.commander = null;
+                newDeck.commanders = [];
                 decks.push(newDeck);
                 currentDeckIndex = decks.length - 1;
                 deck = newDeck;
@@ -3497,11 +3914,13 @@
                                 image_url: faceURL,
                                 scryfall_uri: meta.scryfall_uri || '',
                                 cmc: meta.cmc || 0,
-                                colors: meta.colors || []
+                                colors: meta.colors || [],
+                                keywords: meta.keywords || [],
+                                legalities: meta.legalities || {}
                             };
 
                             if (meta.commander) {
-                                deck.commander = cardData;
+                                deck.commanders.push(cardData);
                             } else if (meta.other) {
                                 deck.tokens.push(cardData);
                             } else {
@@ -3527,11 +3946,13 @@
                             image_url: faceURL,
                             scryfall_uri: meta.scryfall_uri || '',
                             cmc: meta.cmc || 0,
-                            colors: meta.colors || []
+                            colors: meta.colors || [],
+                            keywords: meta.keywords || [],
+                            legalities: meta.legalities || {}
                         };
 
-                        if (meta.commander && !deck.commander) {
-                            deck.commander = cardData;
+                        if (meta.commander) {
+                            deck.commanders.push(cardData);
                         } else if (meta.other) {
                             deck.tokens.push(cardData);
                         } else {
@@ -3544,7 +3965,7 @@
                 }
             }
 
-            console.log(`C2TTS import complete: commander=${deck.commander ? 'yes' : 'no'}, cards=${deck.cards.length}, other=${deck.tokens.length}`);
+            console.log(`C2TTS import complete: commanders=${deck.commanders.length}, cards=${deck.cards.length}, other=${deck.tokens.length}`);
         }
 
         // Legacy import path for JSONs from frogtown.me or other TTS exporters — uses Scryfall
@@ -3710,16 +4131,18 @@
                                 const isLikelyCommander = obj.Transform?.posX < 3 && obj.Transform?.posX > -3 
                                     && obj.ContainedObjects.length === 1;
                                 
-                                if (isLikelyCommander && !deck.commander) {
-                                    deck.commander = {
+                                if (isLikelyCommander && deck.commanders.length < 2) {
+                                    deck.commanders.push({
                                         id: scryfallCard.id,
                                         name: scryfallCard.name,
                                         type_line: scryfallCard.type_line,
                                         image_url: faceURL, // Use the custom art from JSON
                                         scryfall_uri: scryfallCard.scryfall_uri,
                                         cmc: scryfallCard.cmc || 0,
-                                        colors: scryfallCard.colors || []
-                                    };
+                                        colors: scryfallCard.colors || [],
+                                        keywords: scryfallCard.keywords || [],
+                                        legalities: scryfallCard.legalities || {}
+                                    });
                                 } else if (isTokenOrEmblem) {
                                     // Add to tokens array
                                     deck.tokens.push({
@@ -3759,16 +4182,18 @@
                     if (cardName && faceURL) {
                         const scryfallCard = await fetchCardByName(cardName);
                         
-                        if (scryfallCard && !deck.commander) {
-                            deck.commander = {
+                        if (scryfallCard && deck.commanders.length < 2) {
+                            deck.commanders.push({
                                 id: scryfallCard.id,
                                 name: scryfallCard.name,
                                 type_line: scryfallCard.type_line,
                                 image_url: faceURL, // Use the custom art from JSON
                                 scryfall_uri: scryfallCard.scryfall_uri,
                                 cmc: scryfallCard.cmc || 0,
-                                colors: scryfallCard.colors || []
-                            };
+                                colors: scryfallCard.colors || [],
+                                keywords: scryfallCard.keywords || [],
+                                legalities: scryfallCard.legalities || {}
+                            });
                         }
                         
                         processedCards++;
@@ -3827,7 +4252,7 @@
             
             // Check if deck is completely empty (no cards, no commander, no tokens)
             const isEmpty = deck.cards.length === 0 && 
-                           (!deck.commander || deck.commander.length === 0) && 
+                           (!deck.commanders || deck.commanders.length === 0) && 
                            (!deck.tokens || deck.tokens.length === 0);
             
             if (isEmpty) {
