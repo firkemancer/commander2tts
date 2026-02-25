@@ -3418,6 +3418,115 @@
             }
             
             const objectStates = ttsJson.ObjectStates;
+
+            // Detect if this is a C2TTS-exported JSON by checking for C2TTSData on any card
+            const hasC2TTSData = objectStates.some(obj => {
+                if (obj.C2TTSData) return true;
+                if (obj.ContainedObjects) {
+                    return obj.ContainedObjects.some(c => c.C2TTSData);
+                }
+                return false;
+            });
+
+            if (hasC2TTSData) {
+                console.log('C2TTS JSON detected — using fast import (no Scryfall calls)');
+                await importFromC2TTSJson(deck, objectStates);
+            } else {
+                console.log('Non-C2TTS JSON detected — using legacy import with Scryfall lookups');
+                await importFromLegacyTTSJson(deck, objectStates);
+            }
+            
+            // Set deck name from filename or default
+            deck.name = 'Imported Deck';
+            
+            saveDecks();
+            updateDeckSelector();
+            renderDeck();
+            updateCardCounts();
+        }
+
+        // Fast import path for JSONs exported from Commander2TTS — zero Scryfall calls
+        async function importFromC2TTSJson(deck, objectStates) {
+            let totalCards = 0;
+            let processedCards = 0;
+
+            // Count total cards
+            objectStates.forEach(obj => {
+                if (obj.Name === 'DeckCustom' && obj.ContainedObjects) {
+                    totalCards += obj.ContainedObjects.length;
+                } else if (obj.Name === 'Card') {
+                    totalCards += 1;
+                }
+            });
+
+            for (const obj of objectStates) {
+                if (obj.Name === 'DeckCustom' && obj.ContainedObjects && obj.CustomDeck) {
+                    for (const containedObj of obj.ContainedObjects) {
+                        const meta = containedObj.C2TTSData;
+                        const cardId = containedObj.CardID;
+                        const deckKey = String(Math.floor(cardId / 100));
+                        const faceURL = obj.CustomDeck[deckKey]?.FaceURL;
+
+                        if (meta && faceURL) {
+                            const cardData = {
+                                id: meta.id || '',
+                                name: meta.name || containedObj.Nickname,
+                                type_line: meta.type_line || '',
+                                image_url: faceURL,
+                                scryfall_uri: meta.scryfall_uri || '',
+                                cmc: meta.cmc || 0,
+                                colors: meta.colors || []
+                            };
+
+                            if (meta.commander) {
+                                deck.commander = cardData;
+                            } else if (meta.other) {
+                                deck.tokens.push(cardData);
+                            } else {
+                                deck.cards.push(cardData);
+                            }
+                        }
+
+                        processedCards++;
+                        updateProgress(processedCards, totalCards, `- Importing cards (${processedCards}/${totalCards})`);
+                    }
+                }
+                // Handle standalone card (commander in C2TTS exports)
+                else if (obj.Name === 'Card') {
+                    const meta = obj.C2TTSData;
+                    const deckKey = obj.DeckIDs && obj.DeckIDs.length > 0 ? String(Math.floor(obj.DeckIDs[0] / 100)) : '1';
+                    const faceURL = obj.CustomDeck?.[deckKey]?.FaceURL;
+
+                    if (meta && faceURL) {
+                        const cardData = {
+                            id: meta.id || '',
+                            name: meta.name || obj.Nickname,
+                            type_line: meta.type_line || '',
+                            image_url: faceURL,
+                            scryfall_uri: meta.scryfall_uri || '',
+                            cmc: meta.cmc || 0,
+                            colors: meta.colors || []
+                        };
+
+                        if (meta.commander && !deck.commander) {
+                            deck.commander = cardData;
+                        } else if (meta.other) {
+                            deck.tokens.push(cardData);
+                        } else {
+                            deck.cards.push(cardData);
+                        }
+                    }
+
+                    processedCards++;
+                    updateProgress(processedCards, totalCards, `- Importing cards (${processedCards}/${totalCards})`);
+                }
+            }
+
+            console.log(`C2TTS import complete: commander=${deck.commander ? 'yes' : 'no'}, cards=${deck.cards.length}, other=${deck.tokens.length}`);
+        }
+
+        // Legacy import path for JSONs from frogtown.me or other TTS exporters — uses Scryfall
+        async function importFromLegacyTTSJson(deck, objectStates) {
             let totalCards = 0;
             let processedCards = 0;
 
@@ -3645,14 +3754,6 @@
                     }
                 }
             }
-            
-            // Set deck name from filename or default
-            deck.name = 'Imported Deck';
-            
-            saveDecks();
-            updateDeckSelector();
-            renderDeck();
-            updateCardCounts();
         }
 
         function resetCardBackToDefault() {
