@@ -3137,6 +3137,16 @@
                     CardID: cardId,
                     Name: "Card",
                     Nickname: card.name,
+                    C2TTSData: {
+                        id: card.id,
+                        name: card.name,
+                        type_line: card.type_line,
+                        scryfall_uri: card.scryfall_uri,
+                        cmc: card.cmc || 0,
+                        colors: card.colors || [],
+                        commander: false,
+                        other: false
+                    },
                     Transform: {
                         posX: 0,
                         posY: 0,
@@ -3188,6 +3198,16 @@
                 CardID: 100,
                 Name: "Card",
                 Nickname: deck.commander.name,
+                C2TTSData: {
+                    id: deck.commander.id,
+                    name: deck.commander.name,
+                    type_line: deck.commander.type_line,
+                    scryfall_uri: deck.commander.scryfall_uri,
+                    cmc: deck.commander.cmc || 0,
+                    colors: deck.commander.colors || [],
+                    commander: true,
+                    other: false
+                },
                 Transform: {
                     posX: 2.2,
                     posY: 1,
@@ -3227,6 +3247,16 @@
                         CardID: cardId,
                         Name: "Card",
                         Nickname: token.name,
+                        C2TTSData: {
+                            id: token.id,
+                            name: token.name,
+                            type_line: token.type_line,
+                            scryfall_uri: token.scryfall_uri,
+                            cmc: token.cmc || 0,
+                            colors: token.colors || [],
+                            commander: false,
+                            other: true
+                        },
                         Transform: {
                             posX: 0,
                             posY: 0,
