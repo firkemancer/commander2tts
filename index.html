@@ -3399,7 +3399,7 @@
                 closeImportDeckModal();
                 showLoadingOverlay();
                 
-                await importFromTTSJson(json);
+                await importFromTTSJson(json, file.name);
                 
                 hideLoadingOverlay();
                 showNotification('Deck imported successfully from JSON!', 'success');
@@ -3415,7 +3415,7 @@
             }
         }
         
-        async function importFromTTSJson(ttsJson) {
+        async function importFromTTSJson(ttsJson, fileName = '') {
             // Reuse current deck if it's empty, otherwise create a new one
             let deck;
             const currentDeck = getCurrentDeck();
@@ -3457,8 +3457,9 @@
                 await importFromLegacyTTSJson(deck, objectStates);
             }
             
-            // Set deck name from C2TTSName or default
-            deck.name = ttsJson.C2TTSName || 'Imported Deck';
+            // Set deck name: C2TTSName > filename > fallback
+            const fileBaseName = fileName ? fileName.replace(/\.json$/i, '') : '';
+            deck.name = ttsJson.C2TTSName || fileBaseName || 'Imported Deck';
             
             saveDecks();
             updateDeckSelector();
