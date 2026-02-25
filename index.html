@@ -534,9 +534,92 @@
             transform: scale(1.1);
         }
 
-        .deck-card-badges {
+        .deck-card-edit {
             position: absolute;
             bottom: 8px;
+            left: 8px;
+            background: rgba(155, 127, 212, 0.9);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        .deck-card-edit .material-icons {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .deck-card:hover .deck-card-edit {
+            opacity: 1;
+        }
+
+        .deck-card-edit:hover {
+            background: rgba(155, 127, 212, 1);
+            transform: scale(1.1);
+        }
+
+        .deck-card-edit-menu {
+            position: absolute;
+            bottom: 44px;
+            left: 8px;
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            z-index: 20;
+            min-width: 200px;
+            display: none;
+            overflow: hidden;
+        }
+
+        .deck-card-edit-menu.show {
+            display: block;
+        }
+
+        .deck-card-edit-menu-item {
+            padding: 0.6rem 0.9rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.85rem;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            white-space: nowrap;
+        }
+
+        .deck-card-edit-menu-item:last-child {
+            border-bottom: none;
+        }
+
+        .deck-card-edit-menu-item:hover {
+            background: var(--hover);
+        }
+
+        .deck-card-edit-menu-item.disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .deck-card-edit-menu-item .material-icons {
+            font-size: 18px;
+        }
+
+        .deck-card-badges {
+            position: absolute;
+            bottom: 48px;
             left: 8px;
             display: flex;
             gap: 4px;
@@ -1508,6 +1591,20 @@
         </div>
     </div>
 
+
+    <!-- Commander Confirmation Modal -->
+    <div class="modal" id="commanderConfirmModal">
+        <div class="modal-content" style="max-width: 400px; padding: 1.5rem;">
+            <button class="modal-close" id="closeCommanderConfirmModal">✕</button>
+            <h2 class="modal-title" style="font-size: 1.2rem; margin-bottom: 0.75rem;" id="commanderConfirmTitle">Commander</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;" id="commanderConfirmMessage"></p>
+            <div class="card-back-actions" style="gap: 1rem;">
+                <button class="card-back-btn" id="cancelCommanderBtn" style="background: var(--bg-secondary); color: var(--text-primary);">Cancel</button>
+                <button class="card-back-btn" id="confirmCommanderBtn" style="background: var(--accent); color: white;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Import Deck Modal -->
     <div class="modal" id="importDeckModal">
         <div class="modal-content" style="max-width: 600px;">
@@ -1741,6 +1838,10 @@
                 if (!menuBtn.contains(e.target)) {
                     menu.classList.remove('show');
                 }
+                // Close any open edit dropdown menus on card thumbnails
+                if (!e.target.closest('.deck-card-edit') && !e.target.closest('.deck-card-edit-menu')) {
+                    document.querySelectorAll('.deck-card-edit-menu.show').forEach(m => m.classList.remove('show'));
+                }
             });
 
             document.getElementById('exportDeckBtn').addEventListener('click', openExportModal);
@@ -1751,6 +1852,16 @@
             document.getElementById('closeDeleteDeckModal').addEventListener('click', closeDeleteDeckModal);
             document.getElementById('cancelDeleteBtn').addEventListener('click', closeDeleteDeckModal);
             document.getElementById('confirmDeleteBtn').addEventListener('click', confirmDeleteDeck);
+
+            // Commander Confirmation Modal
+            document.getElementById('closeCommanderConfirmModal').addEventListener('click', closeCommanderConfirmModal);
+            document.getElementById('cancelCommanderBtn').addEventListener('click', closeCommanderConfirmModal);
+            document.getElementById('confirmCommanderBtn').addEventListener('click', confirmCommanderAction);
+            document.getElementById('commanderConfirmModal').addEventListener('click', (e) => {
+                if (e.target.id === 'commanderConfirmModal') {
+                    closeCommanderConfirmModal();
+                }
+            });
 
             // Rename Deck Modal
             document.getElementById('closeRenameDeckModal').addEventListener('click', closeRenameDeckModal);
@@ -2655,6 +2766,35 @@
                 div.dataset.cardIds = JSON.stringify(ids);
             }
             
+            // Determine if card is a legendary creature
+            const isLegendaryCreature = card.type_line && 
+                card.type_line.includes('Legendary') && 
+                card.type_line.includes('Creature');
+            
+            // Determine commander menu option
+            let commanderLabel = '';
+            let commanderIcon = '';
+            let commanderDisabled = '';
+            if (isCommander) {
+                commanderLabel = 'Remove Commander';
+                commanderIcon = 'person_remove';
+                commanderDisabled = '';
+            } else if (!isLegendaryCreature) {
+                commanderLabel = 'Set Commander';
+                commanderIcon = 'person_add';
+                commanderDisabled = ' disabled';
+            } else {
+                const deck = getCurrentDeck();
+                if (deck.commander) {
+                    commanderLabel = 'Replace Commander';
+                    commanderIcon = 'swap_horiz';
+                } else {
+                    commanderLabel = 'Set Commander';
+                    commanderIcon = 'person_add';
+                }
+                commanderDisabled = '';
+            }
+
             div.innerHTML = `
                 <img src="${card.image_url}" alt="${card.name}" class="deck-card-image" loading="lazy">
                 <div class="deck-card-overlay"></div>
@@ -2662,7 +2802,51 @@
                 ${count > 1 ? `<div class="deck-card-count">×${count}</div>` : ''}
                 <button class="deck-card-remove" title="Remove card">×</button>
                 <button class="deck-card-alt-art" title="Change artwork"><span class="material-icons">image_search</span></button>
+                <button class="deck-card-edit" title="Edit"><span class="material-icons">more_vert</span></button>
+                <div class="deck-card-edit-menu">
+                    <div class="deck-card-edit-menu-item commander-option${commanderDisabled}" data-action="commander">
+                        <span class="material-icons">${commanderIcon}</span>
+                        <span>${commanderLabel}</span>
+                    </div>
+                    ${!isCommander ? `<div class="deck-card-edit-menu-item" data-action="duplicate">
+                        <span class="material-icons">content_copy</span>
+                        <span>Duplicate Card</span>
+                    </div>` : ''}
+                </div>
             `;
+
+            // Edit dropdown button
+            const editBtn = div.querySelector('.deck-card-edit');
+            const editMenu = div.querySelector('.deck-card-edit-menu');
+            
+            editBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close any other open edit menus
+                document.querySelectorAll('.deck-card-edit-menu.show').forEach(m => {
+                    if (m !== editMenu) m.classList.remove('show');
+                });
+                editMenu.classList.toggle('show');
+            });
+
+            // Commander option
+            const commanderOption = div.querySelector('.commander-option');
+            if (commanderOption && !commanderOption.classList.contains('disabled')) {
+                commanderOption.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editMenu.classList.remove('show');
+                    handleCommanderAction(card, isCommander, isToken, ids);
+                });
+            }
+
+            // Duplicate option
+            const duplicateOption = div.querySelector('[data-action="duplicate"]');
+            if (duplicateOption) {
+                duplicateOption.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    editMenu.classList.remove('show');
+                    duplicateCard(card, isToken);
+                });
+            }
 
             const altArtBtn = div.querySelector('.deck-card-alt-art');
             altArtBtn.addEventListener('click', (e) => {
@@ -2707,6 +2891,108 @@
             saveDecks();
             updateDeckSelector();
             updateCardCounts();
+        }
+
+        // Commander action handler for edit dropdown
+        let pendingCommanderAction = null;
+
+        function handleCommanderAction(card, isCommander, isToken, ids) {
+            const deck = getCurrentDeck();
+
+            if (isCommander) {
+                // Remove Commander - show confirmation
+                showCommanderConfirmation(
+                    'Remove Commander',
+                    `Are you sure you want to remove "<span style="color: var(--accent); font-weight: bold;">${card.name}</span>" as commander?<br><br>The card will be moved back to the Main Deck.`,
+                    () => {
+                        // Move commander back to main deck
+                        deck.cards.push({ ...deck.commander });
+                        deck.commander = null;
+                        updateFilename();
+                        saveDecks();
+                        updateDeckSelector();
+                        renderDeck();
+                        showNotification(`${card.name} removed as commander`, 'success');
+                    }
+                );
+            } else if (deck.commander) {
+                // Replace Commander - show confirmation
+                const oldCommanderName = deck.commander.name;
+                showCommanderConfirmation(
+                    'Replace Commander',
+                    `Are you sure you want to replace "<span style="color: var(--accent); font-weight: bold;">${oldCommanderName}</span>" with "<span style="color: var(--accent); font-weight: bold;">${card.name}</span>"?<br><br>The old commander will be moved back to the Main Deck.`,
+                    () => {
+                        // Move old commander back to main deck
+                        deck.cards.push({ ...deck.commander });
+                        // Remove new commander from its current location
+                        if (isToken) {
+                            const idx = deck.tokens.findIndex(c => c.id === card.id);
+                            if (idx !== -1) deck.tokens.splice(idx, 1);
+                        } else {
+                            const idx = deck.cards.findIndex(c => c.id === card.id);
+                            if (idx !== -1) deck.cards.splice(idx, 1);
+                        }
+                        // Set as new commander
+                        deck.commander = { ...card };
+                        updateFilename();
+                        saveDecks();
+                        updateDeckSelector();
+                        renderDeck();
+                        showNotification(`${card.name} set as commander`, 'success');
+                    }
+                );
+            } else {
+                // Set Commander - no confirmation needed
+                if (isToken) {
+                    const idx = deck.tokens.findIndex(c => c.id === card.id);
+                    if (idx !== -1) deck.tokens.splice(idx, 1);
+                } else {
+                    const idx = deck.cards.findIndex(c => c.id === card.id);
+                    if (idx !== -1) deck.cards.splice(idx, 1);
+                }
+                deck.commander = { ...card };
+                updateFilename();
+                saveDecks();
+                updateDeckSelector();
+                renderDeck();
+                showNotification(`${card.name} set as commander`, 'success');
+            }
+        }
+
+        function showCommanderConfirmation(title, message, onConfirm) {
+            document.getElementById('commanderConfirmTitle').textContent = title;
+            document.getElementById('commanderConfirmMessage').innerHTML = message;
+            pendingCommanderAction = onConfirm;
+            document.getElementById('commanderConfirmModal').classList.add('active');
+        }
+
+        function closeCommanderConfirmModal() {
+            document.getElementById('commanderConfirmModal').classList.remove('active');
+            pendingCommanderAction = null;
+        }
+
+        function confirmCommanderAction() {
+            if (pendingCommanderAction) {
+                pendingCommanderAction();
+                pendingCommanderAction = null;
+            }
+            closeCommanderConfirmModal();
+        }
+
+        function duplicateCard(card, isToken) {
+            const deck = getCurrentDeck();
+            const cardCopy = { ...card };
+            
+            if (isToken) {
+                deck.tokens.push(cardCopy);
+            } else {
+                deck.cards.push(cardCopy);
+            }
+            
+            saveDecks();
+            updateDeckSelector();
+            updateCardCounts();
+            showNotification(`Duplicated ${card.name}`, 'success');
         }
 
         function highlightCards(query) {
