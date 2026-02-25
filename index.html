@@ -3304,6 +3304,7 @@
             }
 
             return {
+                C2TTSName: deck.name || 'Unnamed Deck',
                 ObjectStates: objectStates
             };
         }
@@ -3436,8 +3437,8 @@
                 await importFromLegacyTTSJson(deck, objectStates);
             }
             
-            // Set deck name from filename or default
-            deck.name = 'Imported Deck';
+            // Set deck name from C2TTSName or default
+            deck.name = ttsJson.C2TTSName || 'Imported Deck';
             
             saveDecks();
             updateDeckSelector();
