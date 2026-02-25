@@ -1,15 +1,14 @@
 # COMMANDER2TTS - Import Moxfield MTG Commander decklists into Tabletop Simulator
 
 Commander2TTS is a simple SPA to import Moxfield MTG Commander decklists, tweak alternate card artworks and export decks into Tabletop Simulator compatible .JSON format.  
-You don't need to setup anything! Just visit [Commander2TTS](https://firkemancer.github.io/commander2tts)!  
-If you want to host it locally, check the [Quick Start](https://github.com/firkemancer/commander2tts?tab=readme-ov-file#quick-start) guide
+You don't need to setup anything! Just visit [Commander2TTS](https://firkemancer.github.io/commander2tts) for the latest build!  
+For nightly versions you'll need to host it locally, check the [Quick Start](https://github.com/firkemancer/commander2tts?tab=readme-ov-file#quick-start) guide.
 
 ## Features
 
 - Import decks from Moxfield
 - Import decks from Tabletop Simulator's Custom Object JSON file
-  - compatible with JSON files exported from frogtown.me
-  - JSON files from frogtown.me don't have commander selected by default
+  - also compatible with JSON files exported from frogtown.me
 - Manually search and add/remove cards
 - Choose alternate card art
 - Use custom image URLs (both alternate card art and back card art)
