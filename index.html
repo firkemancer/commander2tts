@@ -1806,11 +1806,50 @@
             transition: all 0.2s;
             display: flex;
             flex-direction: column;
+            position: relative;
         }
 
         .alt-art-option:hover {
             border-color: var(--accent);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .alt-art-fav-btn {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(var(--bg-primary-rgb), 0.85);
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            opacity: 0;
+            transition: all 0.2s;
+            z-index: 2;
+        }
+
+        .alt-art-option:hover .alt-art-fav-btn {
+            opacity: 1;
+        }
+
+        .alt-art-fav-btn.favorited {
+            opacity: 1;
+            color: #f5c518;
+        }
+
+        .alt-art-fav-btn .material-icons {
+            font-size: 22px;
+        }
+
+        .alt-art-fav-btn:hover {
+            background: rgba(var(--bg-primary-rgb), 1);
+            transform: scale(1.1);
         }
 
         .alt-art-option img {
@@ -4610,6 +4649,102 @@
         }
 
         // Alt art modal
+        // Alt art favorites and custom art storage
+        function getAltArtFavorites() {
+            try {
+                return JSON.parse(localStorage.getItem('commander2tts_favorites') || '{}');
+            } catch { return {}; }
+        }
+
+        function saveAltArtFavorites(favorites) {
+            localStorage.setItem('commander2tts_favorites', JSON.stringify(favorites));
+        }
+
+        function isArtFavorited(cardName, imageUrl) {
+            const favorites = getAltArtFavorites();
+            return (favorites[cardName] || []).includes(imageUrl);
+        }
+
+        function toggleArtFavorite(cardName, imageUrl) {
+            const favorites = getAltArtFavorites();
+            if (!favorites[cardName]) favorites[cardName] = [];
+            const idx = favorites[cardName].indexOf(imageUrl);
+            if (idx >= 0) {
+                favorites[cardName].splice(idx, 1);
+                if (favorites[cardName].length === 0) delete favorites[cardName];
+            } else {
+                favorites[cardName].push(imageUrl);
+            }
+            saveAltArtFavorites(favorites);
+        }
+
+        function getCustomArt(cardName) {
+            try {
+                const all = JSON.parse(localStorage.getItem('commander2tts_custom_art') || '{}');
+                return all[cardName] || [];
+            } catch { return []; }
+        }
+
+        function addCustomArt(cardName, imageUrl) {
+            try {
+                const all = JSON.parse(localStorage.getItem('commander2tts_custom_art') || '{}');
+                if (!all[cardName]) all[cardName] = [];
+                if (!all[cardName].includes(imageUrl)) {
+                    all[cardName].push(imageUrl);
+                    localStorage.setItem('commander2tts_custom_art', JSON.stringify(all));
+                }
+            } catch {}
+        }
+
+        function createAltArtEntry(imageUrl, label, cardName) {
+            const div = document.createElement('div');
+            div.className = 'alt-art-option';
+            const isFav = isArtFavorited(cardName, imageUrl);
+            div.innerHTML = `<button class="alt-art-fav-btn ${isFav ? 'favorited' : ''}" title="Favorite"><span class="material-icons">${isFav ? 'star' : 'star_border'}</span></button><img src="${imageUrl}" alt="${label}"><div class="set-info">${label}</div>`;
+            // Clicking the card image selects it
+            div.querySelector('img').addEventListener('click', () => selectAltArt(imageUrl));
+            div.querySelector('.set-info').addEventListener('click', () => selectAltArt(imageUrl));
+            // Clicking the star toggles favorite
+            const favBtn = div.querySelector('.alt-art-fav-btn');
+            favBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleArtFavorite(cardName, imageUrl);
+                const nowFav = isArtFavorited(cardName, imageUrl);
+                favBtn.classList.toggle('favorited', nowFav);
+                favBtn.querySelector('.material-icons').textContent = nowFav ? 'star' : 'star_border';
+                // Re-sort the grid
+                reorderAltArtGrid(cardName);
+            });
+            div.dataset.imageUrl = imageUrl;
+            return div;
+        }
+
+        function reorderAltArtGrid(cardName) {
+            const grid = document.getElementById('altArtGrid');
+            const entries = Array.from(grid.children);
+            const favorites = getAltArtFavorites();
+            const favUrls = favorites[cardName] || [];
+            const customUrls = getCustomArt(cardName);
+            
+            entries.sort((a, b) => {
+                const urlA = a.dataset.imageUrl;
+                const urlB = b.dataset.imageUrl;
+                const aFav = favUrls.includes(urlA);
+                const bFav = favUrls.includes(urlB);
+                const aCustom = customUrls.includes(urlA);
+                const bCustom = customUrls.includes(urlB);
+                
+                // Favorites first, then custom, then original
+                if (aFav && !bFav) return -1;
+                if (!aFav && bFav) return 1;
+                if (aCustom && !bCustom) return -1;
+                if (!aCustom && bCustom) return 1;
+                return 0;
+            });
+            
+            entries.forEach(el => grid.appendChild(el));
+        }
+
         async function openAltArtModal(card, isCommander, isToken, count = 1, indices = null) {
             currentAltArtCard = { card, isCommander, isToken, count, indices };
             altArtMode = 'all';
@@ -4684,25 +4819,43 @@
                         return new Date(b.released_at) - new Date(a.released_at);
                     });
                     
+                    const addedUrls = new Set();
+                    
                     sortedPrints.forEach(print => {
                         const imageUrl = print.image_uris?.normal || print.card_faces?.[0]?.image_uris?.normal;
                         if (imageUrl) {
-                            const div = document.createElement('div');
-                            div.className = 'alt-art-option';
-                            div.innerHTML = `
-                                <img src="${imageUrl}" alt="${print.set_name}">
-                                <div class="set-info">${print.set_name} (${print.set.toUpperCase()})</div>
-                            `;
-                            div.addEventListener('click', () => selectAltArt(imageUrl));
-                            grid.appendChild(div);
+                            const label = `${print.set_name} (${print.set.toUpperCase()})`;
+                            grid.appendChild(createAltArtEntry(imageUrl, label, card.name));
+                            addedUrls.add(imageUrl);
                         }
                     });
+                    
+                    // Add custom art entries that aren't already in Scryfall results
+                    const customUrls = getCustomArt(card.name);
+                    customUrls.forEach(url => {
+                        if (!addedUrls.has(url)) {
+                            grid.appendChild(createAltArtEntry(url, 'Custom Art', card.name));
+                            addedUrls.add(url);
+                        }
+                    });
+                    
+                    // Sort: favorites > custom > originals
+                    reorderAltArtGrid(card.name);
                     
                     if (grid.children.length === 0) {
                         grid.innerHTML = '<div class="empty-state">No images found for this card</div>';
                     }
                 } else {
-                    grid.innerHTML = '<div class="empty-state">No alternate printings found</div>';
+                    grid.innerHTML = '';
+                    // Even with no Scryfall results, show custom art
+                    const customUrls = getCustomArt(card.name);
+                    customUrls.forEach(url => {
+                        grid.appendChild(createAltArtEntry(url, 'Custom Art', card.name));
+                    });
+                    reorderAltArtGrid(card.name);
+                    if (grid.children.length === 0) {
+                        grid.innerHTML = '<div class="empty-state">No alternate printings found</div>';
+                    }
                 }
             } catch (error) {
                 grid.innerHTML = '<div class="empty-state">Error loading alternate art. Try again.</div>';
@@ -4813,13 +4966,28 @@
         }
 
         function useCustomUrl() {
-            const url = document.getElementById('customUrlInput').value.trim();
+            const input = document.getElementById('customUrlInput');
+            const url = input.value.trim();
             if (!url) {
                 showNotification('Please enter a valid image URL', 'warning');
                 return;
             }
 
+            if (currentAltArtCard) {
+                const cardName = currentAltArtCard.card.name;
+                addCustomArt(cardName, url);
+                
+                // Add to grid if not already there
+                const grid = document.getElementById('altArtGrid');
+                const existing = Array.from(grid.children).find(el => el.dataset.imageUrl === url);
+                if (!existing) {
+                    grid.appendChild(createAltArtEntry(url, 'Custom Art', cardName));
+                    reorderAltArtGrid(cardName);
+                }
+            }
+
             selectAltArt(url);
+            input.value = '';
         }
 
         function closeAltArtModal() {
