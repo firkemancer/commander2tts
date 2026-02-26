@@ -1658,6 +1658,91 @@
             flex: 1;
         }
 
+        .alt-art-group-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border);
+        }
+
+        .alt-art-mode-bar {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .alt-art-mode-btn {
+            flex: 1;
+            padding: 0.5rem 0.75rem;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            background: var(--bg-secondary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+            text-align: center;
+        }
+
+        .alt-art-mode-btn:hover {
+            background: var(--hover);
+        }
+
+        .alt-art-mode-btn.active {
+            border-color: var(--accent);
+            background: var(--accent);
+            color: white;
+        }
+
+        .alt-art-copy-nav {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.75rem;
+        }
+
+        .alt-art-copy-nav button {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .alt-art-copy-nav button:hover {
+            background: var(--hover);
+            border-color: var(--accent);
+        }
+
+        .alt-art-copy-nav button .material-icons {
+            font-size: 18px;
+        }
+
+        .alt-art-copy-nav .copy-label {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            min-width: 100px;
+            text-align: center;
+        }
+
+        .alt-art-copy-preview {
+            width: 60px;
+            height: 84px;
+            border-radius: 4px;
+            border: 2px solid var(--border);
+            object-fit: cover;
+        }
+
         .card-back-modal-content {
             background: var(--bg-card);
             border: 2px solid var(--border);
@@ -2506,6 +2591,18 @@
     <div class="modal" id="altArtModal">
         <div class="modal-content">
             <button class="modal-close" id="closeModal">✕</button>
+            <div class="alt-art-group-controls" id="altArtGroupControls" style="display: none;">
+                <div class="alt-art-mode-bar">
+                    <button class="alt-art-mode-btn active" id="altArtModeAll">Apply to all copies</button>
+                    <button class="alt-art-mode-btn" id="altArtModeIndiv">Apply individually</button>
+                </div>
+                <div class="alt-art-copy-nav" id="altArtCopyNav" style="display: none;">
+                    <button id="altArtPrev"><span class="material-icons">chevron_left</span></button>
+                    <img class="alt-art-copy-preview" id="altArtCopyPreview" src="" alt="Current art">
+                    <span class="copy-label" id="altArtCopyLabel">Copy 1 of 4</span>
+                    <button id="altArtNext"><span class="material-icons">chevron_right</span></button>
+                </div>
+            </div>
             <div class="custom-url-section">
                 <h3>Or use custom image URL (Imgur, etc.)</h3>
                 <input 
@@ -2831,6 +2928,8 @@
         let searchTimeout = null;
         let currentFilter = 'all';
         let currentAltArtCard = null;
+        let altArtMode = 'all'; // 'all' or 'individual'
+        let altArtCurrentCopy = 0; // index into the indices array
 
         // Initialize
         function init() {
@@ -3072,6 +3171,22 @@
             // Modal
             document.getElementById('closeModal').addEventListener('click', closeAltArtModal);
             document.getElementById('useCustomUrl').addEventListener('click', useCustomUrl);
+
+            // Alt art group mode controls
+            document.getElementById('altArtModeAll').addEventListener('click', () => setAltArtMode('all'));
+            document.getElementById('altArtModeIndiv').addEventListener('click', () => setAltArtMode('individual'));
+            document.getElementById('altArtPrev').addEventListener('click', () => {
+                if (altArtCurrentCopy > 0) {
+                    altArtCurrentCopy--;
+                    updateAltArtCopyNav();
+                }
+            });
+            document.getElementById('altArtNext').addEventListener('click', () => {
+                if (currentAltArtCard && currentAltArtCard.indices && altArtCurrentCopy < currentAltArtCard.indices.length - 1) {
+                    altArtCurrentCopy++;
+                    updateAltArtCopyNav();
+                }
+            });
 
             // Theme picker
             document.getElementById('themeSwatch').addEventListener('click', () => {
@@ -3916,7 +4031,7 @@
                 
                 deckList.innerHTML = '';
                 sortedCards.forEach(group => {
-                    deckList.appendChild(createDeckCard(group.card, false, false, group.count, group.ids));
+                    deckList.appendChild(createDeckCard(group.card, false, false, group.count, group.ids, group.indices));
                 });
             }
 
@@ -3936,7 +4051,7 @@
                 
                 tokenList.innerHTML = '';
                 sortedTokens.forEach(group => {
-                    tokenList.appendChild(createDeckCard(group.card, false, true, group.count, group.ids));
+                    tokenList.appendChild(createDeckCard(group.card, false, true, group.count, group.ids, group.indices));
                 });
                 document.getElementById('tokenCount').textContent = deck.tokens.length;
             } else {
@@ -4063,7 +4178,7 @@
                 
                 if (!currentCardNames.has(group.card.name) && matchesSearch) {
                     // New card that matches both filters - add it to the list
-                    const cardElement = createDeckCard(group.card, false, false, group.count, group.ids);
+                    const cardElement = createDeckCard(group.card, false, false, group.count, group.ids, group.indices);
                     if (deckList) {
                         deckList.appendChild(cardElement);
                     }
@@ -4112,7 +4227,7 @@
             });
         }
 
-        function createDeckCard(card, isCommander, isToken = false, count = 1, ids = null) {
+        function createDeckCard(card, isCommander, isToken = false, count = 1, ids = null, indices = null) {
             const div = document.createElement('div');
             div.className = 'deck-card';
             div.dataset.cardId = card.id;
@@ -4207,7 +4322,7 @@
             const altArtBtn = div.querySelector('.deck-card-alt-art');
             altArtBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
-                openAltArtModal(card, isCommander, isToken);
+                openAltArtModal(card, isCommander, isToken, count, indices);
             });
 
             const removeBtn = div.querySelector('.deck-card-remove');
@@ -4399,16 +4514,29 @@
         }
 
         // Alt art modal
-        async function openAltArtModal(card, isCommander, isToken) {
-            currentAltArtCard = { card, isCommander, isToken };
+        async function openAltArtModal(card, isCommander, isToken, count = 1, indices = null) {
+            currentAltArtCard = { card, isCommander, isToken, count, indices };
+            altArtMode = 'all';
+            altArtCurrentCopy = 0;
+
             const modal = document.getElementById('altArtModal');
             const grid = document.getElementById('altArtGrid');
+            const groupControls = document.getElementById('altArtGroupControls');
+            
+            // Show group controls only for grouped cards (count > 1)
+            if (count > 1 && !isCommander) {
+                groupControls.style.display = '';
+                document.getElementById('altArtModeAll').classList.add('active');
+                document.getElementById('altArtModeIndiv').classList.remove('active');
+                document.getElementById('altArtCopyNav').style.display = 'none';
+            } else {
+                groupControls.style.display = 'none';
+            }
             
             modal.classList.add('active');
             grid.innerHTML = '<div class="loading">Loading alternate art...</div>';
 
             try {
-                // First, try to get the card by exact name to find its Oracle ID
                 const exactResponse = await fetch(`https://api.scryfall.com/cards/named?exact=${encodeURIComponent(card.name)}`);
                 
                 if (!exactResponse.ok) {
@@ -4418,14 +4546,12 @@
                 const exactCard = await exactResponse.json();
                 const oracleId = exactCard.oracle_id;
                 
-                // Now fetch all prints using the Oracle ID
                 const printsResponse = await fetch(`https://api.scryfall.com/cards/search?order=released&q=oracleid:${oracleId}&unique=prints`);
                 const printsData = await printsResponse.json();
 
                 if (printsData.data && printsData.data.length > 0) {
                     grid.innerHTML = '';
                     
-                    // Sort by release date (newest first)
                     const sortedPrints = printsData.data.sort((a, b) => {
                         return new Date(b.released_at) - new Date(a.released_at);
                     });
@@ -4458,41 +4584,102 @@
 
         function selectAltArt(imageUrl) {
             const deck = getCurrentDeck();
-            const { card, isCommander, isToken } = currentAltArtCard;
+            const { card, isCommander, isToken, count, indices } = currentAltArtCard;
 
             if (isCommander) {
                 const cmd = deck.commanders.find(c => c.id === card.id);
                 if (cmd) cmd.image_url = imageUrl;
-            } else if (isToken) {
-                // Update all tokens with matching ID
-                deck.tokens.forEach(t => {
-                    if (t.id === card.id) {
-                        t.image_url = imageUrl;
-                    }
-                });
+            } else if (altArtMode === 'individual' && indices && indices.length > 1) {
+                // Apply only to the selected copy by array index
+                const targetArray = isToken ? deck.tokens : deck.cards;
+                const targetIndex = indices[altArtCurrentCopy];
+                if (targetArray[targetIndex]) {
+                    targetArray[targetIndex].image_url = imageUrl;
+                }
+                
+                // Update the copy preview
+                updateAltArtCopyPreview();
+                
+                // Auto-advance to next copy if not the last one
+                if (altArtCurrentCopy < indices.length - 1) {
+                    altArtCurrentCopy++;
+                    updateAltArtCopyNav();
+                } else {
+                    showNotification(`Art set for all ${indices.length} copies of ${card.name}`, 'success');
+                }
+                
+                saveDecks();
+                // Don't close modal — let user continue picking art for other copies
+                return;
             } else {
-                // Update all cards with matching ID (handles duplicates)
-                deck.cards.forEach(c => {
-                    if (c.id === card.id) {
-                        c.image_url = imageUrl;
-                    }
-                });
+                // Apply to all copies
+                const targetArray = isToken ? deck.tokens : deck.cards;
+                if (indices && indices.length > 0) {
+                    indices.forEach(idx => {
+                        if (targetArray[idx]) {
+                            targetArray[idx].image_url = imageUrl;
+                        }
+                    });
+                } else {
+                    // Fallback: match by id
+                    targetArray.forEach(c => {
+                        if (c.id === card.id) {
+                            c.image_url = imageUrl;
+                        }
+                    });
+                }
             }
 
             saveDecks();
             
-            // Preserve the search query before re-rendering
             const searchInput = document.getElementById('deckSearch');
             const currentQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
             
             renderDeck();
             
-            // Re-apply the search filter after rendering
             if (currentQuery) {
                 highlightCards(currentQuery);
             }
             
             closeAltArtModal();
+        }
+
+        function setAltArtMode(mode) {
+            altArtMode = mode;
+            altArtCurrentCopy = 0;
+            
+            document.getElementById('altArtModeAll').classList.toggle('active', mode === 'all');
+            document.getElementById('altArtModeIndiv').classList.toggle('active', mode === 'individual');
+            
+            if (mode === 'individual') {
+                document.getElementById('altArtCopyNav').style.display = '';
+                updateAltArtCopyNav();
+            } else {
+                document.getElementById('altArtCopyNav').style.display = 'none';
+            }
+        }
+
+        function updateAltArtCopyNav() {
+            const { indices } = currentAltArtCard;
+            if (!indices) return;
+            
+            document.getElementById('altArtCopyLabel').textContent = 
+                `Copy ${altArtCurrentCopy + 1} of ${indices.length}`;
+            
+            updateAltArtCopyPreview();
+        }
+
+        function updateAltArtCopyPreview() {
+            const { isToken, indices } = currentAltArtCard;
+            if (!indices) return;
+            
+            const deck = getCurrentDeck();
+            const targetArray = isToken ? deck.tokens : deck.cards;
+            const targetCard = targetArray[indices[altArtCurrentCopy]];
+            
+            if (targetCard) {
+                document.getElementById('altArtCopyPreview').src = targetCard.image_url;
+            }
         }
 
         function useCustomUrl() {
@@ -4509,6 +4696,14 @@
             document.getElementById('altArtModal').classList.remove('active');
             document.getElementById('customUrlInput').value = '';
             currentAltArtCard = null;
+            
+            // Re-render in case individual mode made changes without closing
+            const searchInput = document.getElementById('deckSearch');
+            const currentQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
+            renderDeck();
+            if (currentQuery) {
+                highlightCards(currentQuery);
+            }
         }
 
         // Card preview system
@@ -4621,7 +4816,7 @@
         // Card grouping and sorting utilities
         function groupCardsByName(cards) {
             const grouped = {};
-            cards.forEach(card => {
+            cards.forEach((card, index) => {
                 // Create a unique key based on name and sorted colors
                 const colorKey = (card.colors || []).sort().join('');
                 const uniqueKey = `${card.name}|${colorKey}`;
@@ -4630,11 +4825,13 @@
                     grouped[uniqueKey] = {
                         card: card,
                         count: 0,
-                        ids: []
+                        ids: [],
+                        indices: []
                     };
                 }
                 grouped[uniqueKey].count++;
                 grouped[uniqueKey].ids.push(card.id);
+                grouped[uniqueKey].indices.push(index);
             });
             return Object.values(grouped);
         }
