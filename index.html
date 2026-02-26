@@ -4685,6 +4685,10 @@
             } catch { return []; }
         }
 
+        function isScryfallUrl(url) {
+            return url && (url.includes('scryfall.io') || url.includes('scryfall.com'));
+        }
+
         function addCustomArt(cardName, imageUrl) {
             try {
                 const all = JSON.parse(localStorage.getItem('commander2tts_custom_art') || '{}');
@@ -4758,6 +4762,23 @@
             
             // Set initial preview image
             previewImg.src = card.image_url;
+            
+            // If card's current art is custom (non-Scryfall), save it
+            if (card.image_url && !isScryfallUrl(card.image_url)) {
+                addCustomArt(card.name, card.image_url);
+            }
+            
+            // Also check all copies for custom art in group
+            if (indices && indices.length > 0) {
+                const deck = getCurrentDeck();
+                const targetArray = isToken ? deck.tokens : deck.cards;
+                indices.forEach(idx => {
+                    const c = targetArray[idx];
+                    if (c && c.image_url && !isScryfallUrl(c.image_url)) {
+                        addCustomArt(card.name, c.image_url);
+                    }
+                });
+            }
             
             // Show group controls only for grouped cards (count > 1)
             if (count > 1 && !isCommander) {
@@ -5690,6 +5711,11 @@
                                 legalities: meta.legalities || {}
                             };
 
+                            // Save custom art if non-Scryfall URL
+                            if (!isScryfallUrl(faceURL)) {
+                                addCustomArt(cardData.name, faceURL);
+                            }
+
                             if (meta.commander) {
                                 deck.commanders.push(cardData);
                             } else if (meta.other) {
@@ -5721,6 +5747,11 @@
                             keywords: meta.keywords || [],
                             legalities: meta.legalities || {}
                         };
+
+                        // Save custom art if non-Scryfall URL
+                        if (!isScryfallUrl(faceURL)) {
+                            addCustomArt(cardData.name, faceURL);
+                        }
 
                         if (meta.commander) {
                             deck.commanders.push(cardData);
@@ -5903,6 +5934,10 @@
                                     && obj.ContainedObjects.length === 1;
                                 
                                 if (isLikelyCommander && deck.commanders.length < 2) {
+                                    // Save custom art if non-Scryfall URL
+                                    if (!isScryfallUrl(faceURL)) {
+                                        addCustomArt(scryfallCard.name, faceURL);
+                                    }
                                     deck.commanders.push({
                                         id: scryfallCard.id,
                                         name: scryfallCard.name,
@@ -5915,6 +5950,10 @@
                                         legalities: scryfallCard.legalities || {}
                                     });
                                 } else if (isTokenOrEmblem) {
+                                    // Save custom art if non-Scryfall URL
+                                    if (!isScryfallUrl(faceURL)) {
+                                        addCustomArt(scryfallCard.name, faceURL);
+                                    }
                                     // Add to tokens array
                                     deck.tokens.push({
                                         id: scryfallCard.id,
@@ -5926,6 +5965,10 @@
                                         colors: scryfallCard.colors || []
                                     });
                                 } else {
+                                    // Save custom art if non-Scryfall URL
+                                    if (!isScryfallUrl(faceURL)) {
+                                        addCustomArt(scryfallCard.name, faceURL);
+                                    }
                                     // Add to main deck
                                     deck.cards.push({
                                         id: scryfallCard.id,
@@ -5954,6 +5997,10 @@
                         const scryfallCard = await fetchCardByName(cardName);
                         
                         if (scryfallCard && deck.commanders.length < 2) {
+                            // Save custom art if non-Scryfall URL
+                            if (!isScryfallUrl(faceURL)) {
+                                addCustomArt(scryfallCard.name, faceURL);
+                            }
                             deck.commanders.push({
                                 id: scryfallCard.id,
                                 name: scryfallCard.name,
