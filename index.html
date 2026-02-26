@@ -1660,40 +1660,59 @@
 
         .alt-art-group-controls {
             display: flex;
-            flex-direction: column;
-            gap: 0.5rem;
+            align-items: center;
+            gap: 0.75rem;
             margin-bottom: 0.5rem;
             padding-bottom: 0.75rem;
             border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
         }
 
-        .alt-art-mode-bar {
+        .alt-art-toggle-row {
             display: flex;
+            align-items: center;
             gap: 0.5rem;
+            width: 100%;
         }
 
-        .alt-art-mode-btn {
-            flex: 1;
-            padding: 0.5rem 0.75rem;
-            border: 2px solid var(--border);
-            border-radius: 8px;
-            background: var(--bg-secondary);
-            color: var(--text-secondary);
-            cursor: pointer;
+        .alt-art-toggle-label {
             font-size: 0.85rem;
             font-weight: 600;
-            transition: all 0.2s;
-            text-align: center;
+            color: var(--text-secondary);
         }
 
-        .alt-art-mode-btn:hover {
-            background: var(--hover);
+        .alt-art-toggle {
+            position: relative;
+            width: 40px;
+            height: 22px;
+            background: var(--border);
+            border-radius: 11px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+            padding: 0;
+            flex-shrink: 0;
         }
 
-        .alt-art-mode-btn.active {
-            border-color: var(--accent);
+        .alt-art-toggle.active {
             background: var(--accent);
-            color: white;
+        }
+
+        .alt-art-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 18px;
+            height: 18px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .alt-art-toggle.active::after {
+            transform: translateX(18px);
         }
 
         .alt-art-copy-nav {
@@ -2592,9 +2611,9 @@
         <div class="modal-content">
             <button class="modal-close" id="closeModal">✕</button>
             <div class="alt-art-group-controls" id="altArtGroupControls" style="display: none;">
-                <div class="alt-art-mode-bar">
-                    <button class="alt-art-mode-btn active" id="altArtModeAll">Apply to all copies</button>
-                    <button class="alt-art-mode-btn" id="altArtModeIndiv">Apply individually</button>
+                <div class="alt-art-toggle-row">
+                    <span class="alt-art-toggle-label">Apply individually</span>
+                    <button class="alt-art-toggle" id="altArtToggle" title="Toggle individual copy selection"></button>
                 </div>
                 <div class="alt-art-copy-nav" id="altArtCopyNav" style="display: none;">
                     <button id="altArtPrev"><span class="material-icons">chevron_left</span></button>
@@ -3173,19 +3192,21 @@
             document.getElementById('useCustomUrl').addEventListener('click', useCustomUrl);
 
             // Alt art group mode controls
-            document.getElementById('altArtModeAll').addEventListener('click', () => setAltArtMode('all'));
-            document.getElementById('altArtModeIndiv').addEventListener('click', () => setAltArtMode('individual'));
+            document.getElementById('altArtToggle').addEventListener('click', () => {
+                const newMode = altArtMode === 'all' ? 'individual' : 'all';
+                setAltArtMode(newMode);
+            });
             document.getElementById('altArtPrev').addEventListener('click', () => {
-                if (altArtCurrentCopy > 0) {
-                    altArtCurrentCopy--;
-                    updateAltArtCopyNav();
-                }
+                if (!currentAltArtCard || !currentAltArtCard.indices) return;
+                const len = currentAltArtCard.indices.length;
+                altArtCurrentCopy = (altArtCurrentCopy - 1 + len) % len;
+                updateAltArtCopyNav();
             });
             document.getElementById('altArtNext').addEventListener('click', () => {
-                if (currentAltArtCard && currentAltArtCard.indices && altArtCurrentCopy < currentAltArtCard.indices.length - 1) {
-                    altArtCurrentCopy++;
-                    updateAltArtCopyNav();
-                }
+                if (!currentAltArtCard || !currentAltArtCard.indices) return;
+                const len = currentAltArtCard.indices.length;
+                altArtCurrentCopy = (altArtCurrentCopy + 1) % len;
+                updateAltArtCopyNav();
             });
 
             // Theme picker
@@ -4013,6 +4034,8 @@
             const sortOrder = document.getElementById('sortOrder').value;
 
             // Filter cards by category
+            // Annotate with original deck indices first
+            deck.cards.forEach((card, i) => { card._deckIndex = i; });
             const filteredCards = currentFilter === 'all' ? 
                 deck.cards : 
                 deck.cards.filter(card => card.type_line.includes(currentFilter));
@@ -4046,6 +4069,7 @@
                 tokenSection.style.display = 'block';
                 
                 // Group and sort tokens
+                deck.tokens.forEach((token, i) => { token._deckIndex = i; });
                 const groupedTokens = groupCardsByName(deck.tokens);
                 const sortedTokens = sortCards(groupedTokens, sortBy, sortOrder);
                 
@@ -4167,6 +4191,7 @@
             const deckList = document.getElementById('deckList');
             
             // Apply current filter to determine which cards should be visible
+            deck.cards.forEach((card, i) => { card._deckIndex = i; });
             const filteredCards = currentFilter === 'all' ? 
                 deck.cards : 
                 deck.cards.filter(card => card.type_line.includes(currentFilter));
@@ -4526,9 +4551,25 @@
             // Show group controls only for grouped cards (count > 1)
             if (count > 1 && !isCommander) {
                 groupControls.style.display = '';
-                document.getElementById('altArtModeAll').classList.add('active');
-                document.getElementById('altArtModeIndiv').classList.remove('active');
-                document.getElementById('altArtCopyNav').style.display = 'none';
+                
+                // Detect if copies have different art — if so, default to individual mode
+                const deck = getCurrentDeck();
+                const targetArray = isToken ? deck.tokens : deck.cards;
+                let hasMixedArt = false;
+                if (indices && indices.length > 1) {
+                    const firstUrl = targetArray[indices[0]]?.image_url;
+                    hasMixedArt = indices.some(idx => targetArray[idx]?.image_url !== firstUrl);
+                }
+                
+                if (hasMixedArt) {
+                    altArtMode = 'individual';
+                    document.getElementById('altArtToggle').classList.add('active');
+                    document.getElementById('altArtCopyNav').style.display = '';
+                    updateAltArtCopyNav();
+                } else {
+                    document.getElementById('altArtToggle').classList.remove('active');
+                    document.getElementById('altArtCopyNav').style.display = 'none';
+                }
             } else {
                 groupControls.style.display = 'none';
             }
@@ -4600,12 +4641,10 @@
                 // Update the copy preview
                 updateAltArtCopyPreview();
                 
-                // Auto-advance to next copy if not the last one
+                // Auto-advance to next copy, but stop on last
                 if (altArtCurrentCopy < indices.length - 1) {
                     altArtCurrentCopy++;
                     updateAltArtCopyNav();
-                } else {
-                    showNotification(`Art set for all ${indices.length} copies of ${card.name}`, 'success');
                 }
                 
                 saveDecks();
@@ -4648,8 +4687,8 @@
             altArtMode = mode;
             altArtCurrentCopy = 0;
             
-            document.getElementById('altArtModeAll').classList.toggle('active', mode === 'all');
-            document.getElementById('altArtModeIndiv').classList.toggle('active', mode === 'individual');
+            const toggle = document.getElementById('altArtToggle');
+            toggle.classList.toggle('active', mode === 'individual');
             
             if (mode === 'individual') {
                 document.getElementById('altArtCopyNav').style.display = '';
@@ -4831,7 +4870,8 @@
                 }
                 grouped[uniqueKey].count++;
                 grouped[uniqueKey].ids.push(card.id);
-                grouped[uniqueKey].indices.push(index);
+                // Use original deck index if available, otherwise fall back to iteration index
+                grouped[uniqueKey].indices.push(card._deckIndex !== undefined ? card._deckIndex : index);
             });
             return Object.values(grouped);
         }
