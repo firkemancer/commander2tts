@@ -1619,60 +1619,86 @@
             color: var(--accent);
         }
 
-        .alt-art-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        .alt-art-modal-layout {
+            display: flex;
             gap: 1.5rem;
-            margin-top: 1rem;
+            min-height: 400px;
         }
 
-        .alt-art-option {
-            cursor: pointer;
-            border: 3px solid var(--border);
-            border-radius: 8px;
-            overflow: hidden;
-            transition: all 0.2s;
+        /* Left side — preview panel */
+        .alt-art-preview-panel {
             display: flex;
             flex-direction: column;
-        }
-
-        .alt-art-option:hover {
-            border-color: var(--accent);
-            transform: scale(1.05);
-        }
-
-        .alt-art-option img {
-            width: 100%;
-            display: block;
+            align-items: center;
+            gap: 0.75rem;
             flex-shrink: 0;
+            width: 375px;
+            position: sticky;
+            top: 0;
+            align-self: flex-start;
         }
 
-        .alt-art-option .set-info {
+        .alt-art-copy-selector {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .alt-art-copy-selector select {
             background: var(--bg-secondary);
-            padding: 0.5rem;
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            color: var(--text-primary);
+            font-size: 0.85rem;
+            font-weight: 600;
+            padding: 0.3rem 0.75rem;
+            cursor: pointer;
             text-align: center;
-            font-size: 0.8rem;
+        }
+
+        .alt-art-nav-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
-            flex: 1;
+            transition: all 0.2s;
+            padding: 0;
+            flex-shrink: 0;
         }
 
-        .alt-art-group-controls {
+        .alt-art-nav-btn:hover {
+            background: var(--hover);
+            border-color: var(--accent);
+        }
+
+        .alt-art-nav-btn .material-icons {
+            font-size: 18px;
+        }
+
+        .alt-art-preview-area {
             display: flex;
             align-items: center;
-            gap: 0.75rem;
-            margin-bottom: 0.5rem;
-            padding-bottom: 0.75rem;
-            border-bottom: 2px solid var(--border);
-            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .alt-art-preview-img {
+            width: 375px;
+            border-radius: 12px;
+            border: 3px solid var(--accent);
+            display: block;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         .alt-art-toggle-row {
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            width: 100%;
         }
 
         .alt-art-toggle-label {
@@ -1715,51 +1741,110 @@
             transform: translateX(18px);
         }
 
-        .alt-art-copy-nav {
+        /* Right side — art selection */
+        .alt-art-selection-panel {
+            flex: 1;
             display: flex;
-            align-items: center;
-            justify-content: center;
+            flex-direction: column;
             gap: 0.75rem;
+            min-width: 0;
+            padding-top: 2.5rem;
         }
 
-        .alt-art-copy-nav button {
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
+        .alt-art-custom-url {
+            display: flex;
             border: 2px solid var(--border);
-            background: var(--bg-secondary);
+            border-radius: 50px;
+            overflow: hidden;
+            background: var(--bg-card);
+        }
+
+        .alt-art-custom-url input {
+            flex: 1;
+            border: none;
+            background: transparent;
             color: var(--text-primary);
+            font-size: 0.85rem;
+            padding: 0.6rem 1rem;
+            outline: none;
+            min-width: 0;
+        }
+
+        .alt-art-custom-url input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .alt-art-custom-url button {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 0.6rem 1rem;
+            font-size: 0.8rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: opacity 0.2s;
+            white-space: nowrap;
+        }
+
+        .alt-art-custom-url button:hover {
+            opacity: 0.85;
+        }
+
+        .alt-art-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 1rem;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .alt-art-option {
+            cursor: pointer;
+            border: 3px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .alt-art-option:hover {
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .alt-art-option img {
+            width: 100%;
+            display: block;
+            flex-shrink: 0;
+        }
+
+        .alt-art-option .set-info {
+            background: var(--bg-secondary);
+            padding: 0.4rem;
+            text-align: center;
+            font-size: 0.7rem;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: all 0.2s;
-            padding: 0;
+            flex: 1;
         }
 
-        .alt-art-copy-nav button:hover {
-            background: var(--hover);
-            border-color: var(--accent);
-        }
-
-        .alt-art-copy-nav button .material-icons {
-            font-size: 18px;
-        }
-
-        .alt-art-copy-nav .copy-label {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: var(--text-primary);
-            min-width: 100px;
-            text-align: center;
-        }
-
-        .alt-art-copy-preview {
-            width: 60px;
-            height: 84px;
-            border-radius: 4px;
-            border: 2px solid var(--border);
-            object-fit: cover;
+        @media (max-width: 900px) {
+            .alt-art-modal-layout {
+                flex-direction: column;
+                min-height: auto;
+            }
+            .alt-art-preview-panel {
+                width: 100%;
+                position: static;
+            }
+            .alt-art-preview-img {
+                width: 250px;
+            }
+            .alt-art-selection-panel {
+                padding-top: 0;
+            }
         }
 
         .card-back-modal-content {
@@ -2114,28 +2199,6 @@
             display: flex;
             gap: 0.5rem;
             margin-bottom: 1rem;
-        }
-
-        .custom-url-section {
-            margin-top: 0.5rem;
-            padding-top: 0.5rem;
-        }
-
-        .custom-url-input {
-            width: 100%;
-            padding: 0.5rem;
-            border: 2px solid var(--border);
-            border-radius: 6px;
-            background: var(--bg-card);
-            color: var(--text-primary);
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
-
-        .url-btn {
-            margin-top: 0.5rem;
-            font-size: 0.85rem;
-            padding: 0.5rem 1rem;
         }
 
         .loading-overlay {
@@ -2610,29 +2673,31 @@
     <div class="modal" id="altArtModal">
         <div class="modal-content">
             <button class="modal-close" id="closeModal">✕</button>
-            <div class="alt-art-group-controls" id="altArtGroupControls" style="display: none;">
-                <div class="alt-art-toggle-row">
-                    <span class="alt-art-toggle-label">Apply individually</span>
-                    <button class="alt-art-toggle" id="altArtToggle" title="Toggle individual copy selection"></button>
+            <div class="alt-art-modal-layout">
+                <!-- Left: Preview Panel -->
+                <div class="alt-art-preview-panel">
+                    <div class="alt-art-copy-selector" id="altArtCopySelector" style="display: none;">
+                        <button class="alt-art-nav-btn" id="altArtPrev"><span class="material-icons">chevron_left</span></button>
+                        <select id="altArtCopySelect"></select>
+                        <button class="alt-art-nav-btn" id="altArtNext"><span class="material-icons">chevron_right</span></button>
+                    </div>
+                    <div class="alt-art-preview-area">
+                        <img class="alt-art-preview-img" id="altArtPreviewImg" src="" alt="Card preview">
+                    </div>
+                    <div class="alt-art-toggle-row" id="altArtToggleRow" style="display: none;">
+                        <span class="alt-art-toggle-label">Apply individually</span>
+                        <button class="alt-art-toggle" id="altArtToggle" title="Toggle individual copy selection"></button>
+                    </div>
                 </div>
-                <div class="alt-art-copy-nav" id="altArtCopyNav" style="display: none;">
-                    <button id="altArtPrev"><span class="material-icons">chevron_left</span></button>
-                    <img class="alt-art-copy-preview" id="altArtCopyPreview" src="" alt="Current art">
-                    <span class="copy-label" id="altArtCopyLabel">Copy 1 of 4</span>
-                    <button id="altArtNext"><span class="material-icons">chevron_right</span></button>
+                <!-- Right: Selection Panel -->
+                <div class="alt-art-selection-panel">
+                    <div class="alt-art-custom-url">
+                        <input type="text" id="customUrlInput" placeholder="Use custom image URL...">
+                        <button id="useCustomUrl">Use URL</button>
+                    </div>
+                    <div class="alt-art-grid" id="altArtGrid"></div>
                 </div>
             </div>
-            <div class="custom-url-section">
-                <h3>Or use custom image URL (Imgur, etc.)</h3>
-                <input 
-                    type="text" 
-                    class="custom-url-input" 
-                    id="customUrlInput" 
-                    placeholder="Paste image URL..."
-                />
-                <button class="btn url-btn" id="useCustomUrl">Use Custom URL</button>
-            </div>
-            <div class="alt-art-grid" id="altArtGrid"></div>
         </div>
     </div>
 
@@ -3200,13 +3265,19 @@
                 if (!currentAltArtCard || !currentAltArtCard.indices) return;
                 const len = currentAltArtCard.indices.length;
                 altArtCurrentCopy = (altArtCurrentCopy - 1 + len) % len;
-                updateAltArtCopyNav();
+                updateAltArtCopySelect();
+                updateAltArtPreview();
             });
             document.getElementById('altArtNext').addEventListener('click', () => {
                 if (!currentAltArtCard || !currentAltArtCard.indices) return;
                 const len = currentAltArtCard.indices.length;
                 altArtCurrentCopy = (altArtCurrentCopy + 1) % len;
-                updateAltArtCopyNav();
+                updateAltArtCopySelect();
+                updateAltArtPreview();
+            });
+            document.getElementById('altArtCopySelect').addEventListener('change', (e) => {
+                altArtCurrentCopy = parseInt(e.target.value);
+                updateAltArtPreview();
             });
 
             // Theme picker
@@ -4546,11 +4617,26 @@
 
             const modal = document.getElementById('altArtModal');
             const grid = document.getElementById('altArtGrid');
-            const groupControls = document.getElementById('altArtGroupControls');
+            const copySelector = document.getElementById('altArtCopySelector');
+            const toggleRow = document.getElementById('altArtToggleRow');
+            const previewImg = document.getElementById('altArtPreviewImg');
+            
+            // Set initial preview image
+            previewImg.src = card.image_url;
             
             // Show group controls only for grouped cards (count > 1)
             if (count > 1 && !isCommander) {
-                groupControls.style.display = '';
+                toggleRow.style.display = '';
+                
+                // Build copy dropdown
+                const select = document.getElementById('altArtCopySelect');
+                select.innerHTML = '';
+                for (let i = 0; i < count; i++) {
+                    const opt = document.createElement('option');
+                    opt.value = i;
+                    opt.textContent = `Copy ${i + 1} of ${count}`;
+                    select.appendChild(opt);
+                }
                 
                 // Detect if copies have different art — if so, default to individual mode
                 const deck = getCurrentDeck();
@@ -4564,14 +4650,15 @@
                 if (hasMixedArt) {
                     altArtMode = 'individual';
                     document.getElementById('altArtToggle').classList.add('active');
-                    document.getElementById('altArtCopyNav').style.display = '';
-                    updateAltArtCopyNav();
+                    copySelector.style.display = '';
+                    updateAltArtPreview();
                 } else {
                     document.getElementById('altArtToggle').classList.remove('active');
-                    document.getElementById('altArtCopyNav').style.display = 'none';
+                    copySelector.style.display = 'none';
                 }
             } else {
-                groupControls.style.display = 'none';
+                toggleRow.style.display = 'none';
+                copySelector.style.display = 'none';
             }
             
             modal.classList.add('active');
@@ -4627,6 +4714,9 @@
             const deck = getCurrentDeck();
             const { card, isCommander, isToken, count, indices } = currentAltArtCard;
 
+            // Update the big preview
+            document.getElementById('altArtPreviewImg').src = imageUrl;
+
             if (isCommander) {
                 const cmd = deck.commanders.find(c => c.id === card.id);
                 if (cmd) cmd.image_url = imageUrl;
@@ -4638,17 +4728,7 @@
                     targetArray[targetIndex].image_url = imageUrl;
                 }
                 
-                // Update the copy preview
-                updateAltArtCopyPreview();
-                
-                // Auto-advance to next copy, but stop on last
-                if (altArtCurrentCopy < indices.length - 1) {
-                    altArtCurrentCopy++;
-                    updateAltArtCopyNav();
-                }
-                
                 saveDecks();
-                // Don't close modal — let user continue picking art for other copies
                 return;
             } else {
                 // Apply to all copies
@@ -4671,16 +4751,8 @@
 
             saveDecks();
             
-            const searchInput = document.getElementById('deckSearch');
-            const currentQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
-            
-            renderDeck();
-            
-            if (currentQuery) {
-                highlightCards(currentQuery);
-            }
-            
-            closeAltArtModal();
+            // Update preview with new art
+            document.getElementById('altArtPreviewImg').src = imageUrl;
         }
 
         function setAltArtMode(mode) {
@@ -4690,25 +4762,44 @@
             const toggle = document.getElementById('altArtToggle');
             toggle.classList.toggle('active', mode === 'individual');
             
+            const copySelector = document.getElementById('altArtCopySelector');
             if (mode === 'individual') {
-                document.getElementById('altArtCopyNav').style.display = '';
-                updateAltArtCopyNav();
+                copySelector.style.display = '';
+                updateAltArtCopySelect();
+                updateAltArtPreview();
             } else {
-                document.getElementById('altArtCopyNav').style.display = 'none';
+                copySelector.style.display = 'none';
+                // Sync all copies to first copy's art
+                if (currentAltArtCard) {
+                    const { isToken, indices } = currentAltArtCard;
+                    if (indices && indices.length > 1) {
+                        const deck = getCurrentDeck();
+                        const targetArray = isToken ? deck.tokens : deck.cards;
+                        const firstArt = targetArray[indices[0]]?.image_url;
+                        if (firstArt) {
+                            indices.forEach(idx => {
+                                if (targetArray[idx]) {
+                                    targetArray[idx].image_url = firstArt;
+                                }
+                            });
+                            saveDecks();
+                        }
+                        document.getElementById('altArtPreviewImg').src = firstArt;
+                    } else {
+                        document.getElementById('altArtPreviewImg').src = currentAltArtCard.card.image_url;
+                    }
+                }
             }
         }
 
-        function updateAltArtCopyNav() {
-            const { indices } = currentAltArtCard;
-            if (!indices) return;
-            
-            document.getElementById('altArtCopyLabel').textContent = 
-                `Copy ${altArtCurrentCopy + 1} of ${indices.length}`;
-            
-            updateAltArtCopyPreview();
+        function updateAltArtCopySelect() {
+            const select = document.getElementById('altArtCopySelect');
+            if (select) {
+                select.value = altArtCurrentCopy;
+            }
         }
 
-        function updateAltArtCopyPreview() {
+        function updateAltArtPreview() {
             const { isToken, indices } = currentAltArtCard;
             if (!indices) return;
             
@@ -4717,7 +4808,7 @@
             const targetCard = targetArray[indices[altArtCurrentCopy]];
             
             if (targetCard) {
-                document.getElementById('altArtCopyPreview').src = targetCard.image_url;
+                document.getElementById('altArtPreviewImg').src = targetCard.image_url;
             }
         }
 
