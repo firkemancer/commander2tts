@@ -1836,6 +1836,37 @@
             transform: scale(1.1);
         }
 
+        .alt-art-remove-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            opacity: 0;
+            transition: all 0.2s;
+            z-index: 2;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .alt-art-option:hover .alt-art-remove-btn {
+            opacity: 1;
+        }
+
+        .alt-art-remove-btn:hover {
+            background: rgba(192, 57, 43, 1);
+            transform: scale(1.1);
+        }
+
         .alt-art-option img {
             width: 100%;
             display: block;
@@ -2814,7 +2845,7 @@
                     </div>
                     <div class="deck-menu-item" id="exportDeckBtn">
                         <span>Export to TTS</span>
-                        <img class="card-back-preview" id="cardBackPreview" src="https://i.imgur.com/Hg8CwwU.jpeg" alt="Card back">
+                        <img class="card-back-preview" id="cardBackPreview" src="https://i.imgur.com/tsTuiWN.png" alt="Card back">
                     </div>
                     <div class="deck-menu-item danger" id="deleteDeckBtn">
                         <span>Delete Current Deck</span>
@@ -2963,7 +2994,7 @@
             
             <div class="card-back-input-group">
                 <label for="cardBackUrlInput">Card Back Image URL</label>
-                <img class="card-back-preview-large" id="cardBackPreviewLarge" src="https://i.imgur.com/Hg8CwwU.jpeg" alt="Card back preview">
+                <img class="card-back-preview-large" id="cardBackPreviewLarge" src="https://i.imgur.com/tsTuiWN.png" alt="Card back preview">
                 <input 
                     type="text" 
                     class="card-back-url-input" 
@@ -3249,7 +3280,7 @@
                 // Migrate and ensure all decks have required properties
                 decks.forEach(deck => {
                     if (!deck.cardBackUrl) {
-                        deck.cardBackUrl = 'https://i.imgur.com/Hg8CwwU.jpeg';
+                        deck.cardBackUrl = 'https://i.imgur.com/tsTuiWN.png';
                     }
                     // Migrate old single commander to commanders array
                     if (deck.commander !== undefined && !deck.commanders) {
@@ -3277,7 +3308,7 @@
                 commanders: [],
                 cards: [],
                 tokens: [],
-                cardBackUrl: 'https://i.imgur.com/Hg8CwwU.jpeg'
+                cardBackUrl: 'https://i.imgur.com/tsTuiWN.png'
             };
         }
 
@@ -3448,8 +3479,10 @@
             // Update preview as user types
             document.getElementById('cardBackUrlInput').addEventListener('input', (e) => {
                 const url = e.target.value.trim();
-                if (url) {
-                    document.getElementById('cardBackPreviewLarge').src = url;
+                if (url && isValidUrl(url)) {
+                    const img = new Image();
+                    img.onload = () => { document.getElementById('cardBackPreviewLarge').src = url; };
+                    img.src = url;
                 }
             });
 
@@ -3624,18 +3657,23 @@
         }
 
         function wipeLocalStorageData() {
-            if (confirm('Are you sure you want to wipe all data? This will delete all decks, favorites, custom art, and settings. This cannot be undone.')) {
-                const keysToRemove = [];
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.startsWith('commander2tts') || key === 'theme' || key === 'themeColor') {
-                        keysToRemove.push(key);
+            showConfirmDialog(
+                'Wipe All Data',
+                'This will delete all decks, favorites, custom art, and settings.<br><br>This action cannot be undone.',
+                'Wipe All Data',
+                () => {
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith('commander2tts') || key === 'theme' || key === 'themeColor') {
+                            keysToRemove.push(key);
+                        }
                     }
+                    keysToRemove.forEach(key => localStorage.removeItem(key));
+                    showNotification('All data wiped. Reloading...', 'success');
+                    setTimeout(() => location.reload(), 1000);
                 }
-                keysToRemove.forEach(key => localStorage.removeItem(key));
-                showNotification('All data wiped. Reloading...', 'success');
-                setTimeout(() => location.reload(), 1000);
-            }
+            );
         }
 
         // Scryfall API
@@ -4890,6 +4928,23 @@
             } catch { return []; }
         }
 
+        function isValidUrl(str) {
+            try {
+                const url = new URL(str);
+                return url.protocol === 'http:' || url.protocol === 'https:';
+            } catch { return false; }
+        }
+
+        function isValidImageUrl(url) {
+            return new Promise((resolve) => {
+                if (!isValidUrl(url)) { resolve(false); return; }
+                const img = new Image();
+                img.onload = () => resolve(true);
+                img.onerror = () => resolve(false);
+                img.src = url;
+            });
+        }
+
         function isScryfallUrl(url) {
             return url && (url.includes('scryfall.io') || url.includes('scryfall.com'));
         }
@@ -4905,11 +4960,61 @@
             } catch {}
         }
 
+        function removeCustomArt(cardName, imageUrl) {
+            try {
+                const all = JSON.parse(localStorage.getItem('commander2tts_custom_art') || '{}');
+                if (all[cardName]) {
+                    all[cardName] = all[cardName].filter(u => u !== imageUrl);
+                    if (all[cardName].length === 0) delete all[cardName];
+                    localStorage.setItem('commander2tts_custom_art', JSON.stringify(all));
+                }
+                // Also remove from favorites if present
+                const favorites = getAltArtFavorites();
+                if (favorites[cardName]) {
+                    favorites[cardName] = favorites[cardName].filter(u => u !== imageUrl);
+                    if (favorites[cardName].length === 0) delete favorites[cardName];
+                    saveAltArtFavorites(favorites);
+                }
+            } catch {}
+        }
+
+        function showConfirmDialog(title, message, confirmLabel, onConfirm) {
+            const existing = document.getElementById('genericConfirmModal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.id = 'genericConfirmModal';
+            modal.style.zIndex = '3000';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; padding: 1.5rem;">
+                    <button class="modal-close" id="closeGenericConfirm">✕</button>
+                    <h2 class="modal-title" style="font-size: 1.2rem; margin-bottom: 0.75rem;">${title}</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;">${message}</p>
+                    <div class="card-back-actions" style="gap: 1rem;">
+                        <button class="card-back-btn" id="cancelGenericConfirm" style="background: var(--bg-secondary); color: var(--text-primary);">Cancel</button>
+                        <button class="card-back-btn" id="doGenericConfirm" style="background: #e74c3c; border-color: #e74c3c;">${confirmLabel}</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const close = () => { modal.remove(); };
+            modal.querySelector('#closeGenericConfirm').addEventListener('click', close);
+            modal.querySelector('#cancelGenericConfirm').addEventListener('click', close);
+            modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+            modal.querySelector('#doGenericConfirm').addEventListener('click', () => {
+                close();
+                onConfirm();
+            });
+        }
+
         function createAltArtEntry(imageUrl, label, cardName) {
             const div = document.createElement('div');
             div.className = 'alt-art-option';
             const isFav = isArtFavorited(cardName, imageUrl);
-            div.innerHTML = `<button class="alt-art-fav-btn ${isFav ? 'favorited' : ''}" title="Favorite"><span class="material-icons">${isFav ? 'star' : 'star_border'}</span></button><img src="${imageUrl}" alt="${label}"><div class="set-info">${label}</div>`;
+            const isCustom = label === 'Custom Art';
+            div.innerHTML = `<button class="alt-art-fav-btn ${isFav ? 'favorited' : ''}" title="Favorite"><span class="material-icons">${isFav ? 'star' : 'star_border'}</span></button>${isCustom ? '<button class="alt-art-remove-btn" title="Remove custom art">✕</button>' : ''}<img src="${imageUrl}" alt="${label}"><div class="set-info">${label}</div>`;
             // Clicking the card image selects it
             div.querySelector('img').addEventListener('click', () => selectAltArt(imageUrl));
             div.querySelector('.set-info').addEventListener('click', () => selectAltArt(imageUrl));
@@ -4924,6 +5029,17 @@
                 // Re-sort the grid
                 reorderAltArtGrid(cardName);
             });
+            // X button for custom art
+            if (isCustom) {
+                div.querySelector('.alt-art-remove-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showConfirmDialog('Remove Custom Art', 'Are you sure you want to remove this custom art?', 'Remove', () => {
+                        removeCustomArt(cardName, imageUrl);
+                        div.remove();
+                        showNotification('Custom art removed', 'success');
+                    });
+                });
+            }
             div.dataset.imageUrl = imageUrl;
             return div;
         }
@@ -5194,11 +5310,20 @@
             }
         }
 
-        function useCustomUrl() {
+        async function useCustomUrl() {
             const input = document.getElementById('customUrlInput');
             const url = input.value.trim();
             if (!url) {
-                showNotification('Please enter a valid image URL', 'warning');
+                showNotification('Please enter an image URL', 'warning');
+                return;
+            }
+            if (!isValidUrl(url)) {
+                showNotification('Please enter a valid URL (starting with http:// or https://)', 'warning');
+                return;
+            }
+            const valid = await isValidImageUrl(url);
+            if (!valid) {
+                showNotification('URL does not point to a valid image', 'warning');
                 return;
             }
 
@@ -5517,7 +5642,7 @@
         }
 
         // Export to TTS
-        function exportToTTS() {
+        async function exportToTTS() {
             const deck = getCurrentDeck();
             
             if (!deck.commanders || deck.commanders.length === 0) {
@@ -5533,9 +5658,15 @@
             // Save the card back URL from the modal
             const newCardBackUrl = document.getElementById('cardBackUrlInput').value.trim();
             if (newCardBackUrl) {
-                deck.cardBackUrl = newCardBackUrl;
-                saveDecks();
-                updateCardBackPreview();
+                const valid = await isValidImageUrl(newCardBackUrl);
+                if (valid) {
+                    deck.cardBackUrl = newCardBackUrl;
+                    saveDecks();
+                    updateCardBackPreview();
+                } else {
+                    showNotification('Card back URL is not a valid image.', 'warning');
+                    return;
+                }
             }
 
             const filename = document.getElementById('filenameInput').value || 'commander-deck.json';
@@ -5598,7 +5729,7 @@
                 // Add to CustomDeck
                 mainDeckCustomDeck[deckKey] = {
                     FaceURL: card.image_url,
-                    BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
+                    BackURL: deck.cardBackUrl || "https://i.imgur.com/tsTuiWN.png",
                     NumHeight: 1,
                     NumWidth: 1,
                     BackIsHidden: true,
@@ -5663,7 +5794,7 @@
                     CustomDeck: {
                         "1": {
                             FaceURL: commander.image_url,
-                            BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
+                            BackURL: deck.cardBackUrl || "https://i.imgur.com/tsTuiWN.png",
                             NumHeight: 1,
                             NumWidth: 1,
                             BackIsHidden: true,
@@ -5712,7 +5843,7 @@
                     
                     tokenCustomDeck[deckKey] = {
                         FaceURL: token.image_url,
-                        BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
+                        BackURL: deck.cardBackUrl || "https://i.imgur.com/tsTuiWN.png",
                         NumHeight: 1,
                         NumWidth: 1,
                         BackIsHidden: true,
@@ -5795,7 +5926,7 @@
 
         function openExportModal() {
             const deck = getCurrentDeck();
-            const currentUrl = deck.cardBackUrl || 'https://i.imgur.com/Hg8CwwU.jpeg';
+            const currentUrl = deck.cardBackUrl || 'https://i.imgur.com/tsTuiWN.png';
             
             // Set current values in modal
             document.getElementById('cardBackUrlInput').value = currentUrl;
@@ -6254,7 +6385,7 @@
         }
 
         function resetCardBackToDefault() {
-            const defaultUrl = 'https://i.imgur.com/Hg8CwwU.jpeg';
+            const defaultUrl = 'https://i.imgur.com/tsTuiWN.png';
             document.getElementById('cardBackUrlInput').value = defaultUrl;
             document.getElementById('cardBackPreviewLarge').src = defaultUrl;
         }
@@ -6344,7 +6475,7 @@
         function updateCardBackPreview() {
             const deck = getCurrentDeck();
             const preview = document.getElementById('cardBackPreview');
-            preview.src = deck.cardBackUrl || 'https://i.imgur.com/Hg8CwwU.jpeg';
+            preview.src = deck.cardBackUrl || 'https://i.imgur.com/tsTuiWN.png';
         }
 
         // Initialize app
