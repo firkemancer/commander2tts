@@ -960,11 +960,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 2rem;
+            gap: 1.5rem;
             border-bottom: 2px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-shrink: 0;
         }
 
         .header h1 {
@@ -988,8 +995,6 @@
             display: flex;
             gap: 0.5rem;
             align-items: center;
-            flex: 1;
-            max-width: 700px;
         }
 
         .moxfield-input-main {
@@ -1042,46 +1047,7 @@
             display: flex;
             gap: 0.75rem;
             align-items: center;
-        }
-
-        .theme-swatch-btn {
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            border: 2px solid var(--border);
-            cursor: pointer;
-            transition: all 0.2s;
-            padding: 0;
-            background: var(--accent);
-        }
-
-        .theme-swatch-btn:hover {
-            transform: scale(1.1);
-            border-color: var(--text-secondary);
-        }
-
-        .theme-toggle {
-            background: transparent;
-            color: var(--text-primary);
-            border: none;
-            width: 36px;
-            height: 36px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0;
-        }
-
-        .theme-toggle .material-icons {
-            font-size: 22px;
-        }
-
-        .theme-toggle:hover {
-            background: var(--hover);
-            transform: scale(1.1);
+            padding-right: 1rem;
         }
 
         .deck-selector {
@@ -1092,8 +1058,18 @@
             border-radius: 50px;
             font-size: 1rem;
             cursor: pointer;
-            width: auto;
-            min-width: auto;
+            width: 50ch;
+            min-width: 50ch;
+            max-width: 50ch;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.8rem center;
         }
 
         .container {
@@ -1860,6 +1836,37 @@
             transform: scale(1.1);
         }
 
+        .alt-art-remove-btn {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            border: none;
+            background: rgba(231, 76, 60, 0.9);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            opacity: 0;
+            transition: all 0.2s;
+            z-index: 2;
+            font-size: 1rem;
+            font-weight: bold;
+        }
+
+        .alt-art-option:hover .alt-art-remove-btn {
+            opacity: 1;
+        }
+
+        .alt-art-remove-btn:hover {
+            background: rgba(192, 57, 43, 1);
+            transform: scale(1.1);
+        }
+
         .alt-art-option img {
             width: 100%;
             display: block;
@@ -2130,7 +2137,8 @@
         }
 
         /* Theme Picker Modal */
-        .theme-picker-overlay {
+        /* Settings Modal */
+        .settings-overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -2143,26 +2151,244 @@
             justify-content: center;
         }
 
-        .theme-picker-overlay.active {
+        .settings-overlay.active {
             display: flex;
         }
 
-        .theme-picker {
+        .settings-modal {
             background: var(--bg-card);
             border: 2px solid var(--border);
-            border-radius: 12px;
+            border-radius: 16px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            padding: 1.5rem;
-            width: 420px;
-            max-width: 90vw;
+            width: 600px;
+            max-width: 92vw;
+            height: 520px;
             max-height: 85vh;
-            overflow-y: auto;
+            display: flex;
+            overflow: hidden;
         }
 
-        .theme-picker h3 {
-            margin: 0 0 1rem;
+        .settings-sidebar {
+            width: 160px;
+            flex-shrink: 0;
+            background: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            padding: 1rem 0;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .settings-tab {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.7rem 1.2rem;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.15s;
+            border: none;
+            background: none;
+            text-align: left;
+            width: 100%;
+        }
+
+        .settings-tab:hover {
+            background: var(--hover);
             color: var(--text-primary);
+        }
+
+        .settings-tab.active {
+            background: var(--hover);
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .settings-tab .material-icons {
+            font-size: 20px;
+        }
+
+        .settings-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .settings-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+
+        .settings-header h2 {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            margin: 0;
+        }
+
+        .settings-close {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-weight: bold;
             font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            padding: 0;
+        }
+
+        .settings-close:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .settings-panel {
+            display: none;
+            flex-direction: column;
+        }
+
+        .settings-panel.active {
+            display: flex;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.85rem 0;
+            border-bottom: 1px solid rgba(var(--bg-primary-rgb), 0.3);
+        }
+
+        .settings-row:last-child {
+            border-bottom: none;
+        }
+
+        .settings-row-label {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            font-weight: 500;
+        }
+
+        .settings-row-desc {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-top: 0.15rem;
+        }
+
+        .settings-toggle {
+            position: relative;
+            width: 44px;
+            height: 24px;
+            background: var(--border);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border: none;
+            padding: 0;
+            flex-shrink: 0;
+        }
+
+        .settings-toggle.active {
+            background: var(--accent);
+        }
+
+        .settings-toggle::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .settings-toggle.active::after {
+            transform: translateX(20px);
+        }
+
+        .settings-section-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin: 1rem 0 0.25rem;
+        }
+
+        .settings-section-label:first-child {
+            margin-top: 0;
+        }
+
+        .settings-themes-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.5rem;
+            padding: 0.5rem 0;
+        }
+
+        .settings-btn {
+            padding: 0.6rem 1.2rem;
+            border: 2px solid var(--border);
+            border-radius: 50px;
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .settings-btn:hover {
+            border-color: var(--accent);
+            background: var(--hover);
+        }
+
+        .settings-btn.danger {
+            border-color: #e74c3c;
+            color: #e74c3c;
+        }
+
+        .settings-btn.danger:hover {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .settings-gear-btn {
+            background: transparent;
+            color: var(--text-primary);
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .settings-gear-btn .material-icons {
+            font-size: 22px;
+        }
+
+        .settings-gear-btn:hover {
+            background: var(--hover);
+            transform: scale(1.1);
         }
 
         .theme-section-label {
@@ -2597,11 +2823,13 @@
         })();
     </script>
     <div class="header">
-		<img src="logo.png" width="420" height="45">
-        <!-- Import Controls -->
-        <div class="moxfield-import-section">
-            <button class="import-btn-main" id="importDeckBtn">Import Deck</button>
-            <button class="manual-btn" id="manualBtn">Search Cards</button>
+        <div class="header-left">
+            <img src="logo.png" width="420" height="45">
+            <!-- Import Controls -->
+            <div class="moxfield-import-section">
+                <button class="import-btn-main" id="importDeckBtn">Import Deck</button>
+                <button class="manual-btn" id="manualBtn">Search Cards</button>
+            </div>
         </div>
         
         <div class="header-controls">
@@ -2617,16 +2845,15 @@
                     </div>
                     <div class="deck-menu-item" id="exportDeckBtn">
                         <span>Export to TTS</span>
-                        <img class="card-back-preview" id="cardBackPreview" src="https://i.imgur.com/Hg8CwwU.jpeg" alt="Card back">
+                        <img class="card-back-preview" id="cardBackPreview" src="https://i.imgur.com/tsTuiWN.png" alt="Card back">
                     </div>
                     <div class="deck-menu-item danger" id="deleteDeckBtn">
                         <span>Delete Current Deck</span>
                     </div>
                 </div>
             </button>
-            <button class="theme-swatch-btn" id="themeSwatch" title="Select Theme"></button>
-            <button class="theme-toggle" id="themeToggle" title="Toggle light/dark mode">
-                <span class="material-icons">dark_mode</span>
+            <button class="settings-gear-btn" id="settingsBtn" title="Settings">
+                <span class="material-icons">settings</span>
             </button>
         </div>
     </div>
@@ -2767,7 +2994,7 @@
             
             <div class="card-back-input-group">
                 <label for="cardBackUrlInput">Card Back Image URL</label>
-                <img class="card-back-preview-large" id="cardBackPreviewLarge" src="https://i.imgur.com/Hg8CwwU.jpeg" alt="Card back preview">
+                <img class="card-back-preview-large" id="cardBackPreviewLarge" src="https://i.imgur.com/tsTuiWN.png" alt="Card back preview">
                 <input 
                     type="text" 
                     class="card-back-url-input" 
@@ -2836,159 +3063,132 @@
     </div>
 
     <!-- Theme Picker Modal -->
-    <div class="theme-picker-overlay" id="themePickerOverlay">
-        <div class="theme-picker">
-            <h3>Select Theme</h3>
-
-            <div class="theme-section-label">Solid</div>
-            <div class="theme-grid">
-                <div class="theme-option" data-color="purple">
-                    <div class="swatch" style="background: #9b7fd4;"></div>
-                    <span class="label">Purple</span>
-                </div>
-                <div class="theme-option" data-color="blue">
-                    <div class="swatch" style="background: #5a9fd4;"></div>
-                    <span class="label">Blue</span>
-                </div>
-                <div class="theme-option" data-color="red">
-                    <div class="swatch" style="background: #d46a5a;"></div>
-                    <span class="label">Red</span>
-                </div>
-                <div class="theme-option" data-color="green">
-                    <div class="swatch" style="background: #5aad6a;"></div>
-                    <span class="label">Green</span>
-                </div>
-                <div class="theme-option" data-color="black">
-                    <div class="swatch" style="background: #3a3a3a;"></div>
-                    <span class="label">Black</span>
-                </div>
-                <div class="theme-option" data-color="white">
-                    <div class="swatch" style="background: linear-gradient(135deg, #e8e4dc, #f4f0ea);"></div>
-                    <span class="label">White</span>
-                </div>
+    <!-- Settings Modal -->
+    <div class="settings-overlay" id="settingsOverlay">
+        <div class="settings-modal">
+            <div class="settings-sidebar">
+                <button class="settings-tab active" data-tab="appearance">
+                    Appearance
+                </button>
+                <button class="settings-tab" data-tab="other">
+                    Other
+                </button>
             </div>
+            <div class="settings-body">
+                <div class="settings-header">
+                    <h2 id="settingsTitle">Appearance</h2>
+                    <button class="settings-close" id="closeSettings">✕</button>
+                </div>
 
-            <div class="theme-section-label">2-Color</div>
-            <div class="theme-grid">
-                <div class="theme-option" data-color="azorius">
-                    <div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #5a9fd4);"></div>
-                    <span class="label">Azorius</span>
-                </div>
-                <div class="theme-option" data-color="dimir">
-                    <div class="swatch" style="background: linear-gradient(135deg, #5a9fd4, #3a3a3a);"></div>
-                    <span class="label">Dimir</span>
-                </div>
-                <div class="theme-option" data-color="rakdos">
-                    <div class="swatch" style="background: linear-gradient(135deg, #3a3a3a, #d46a5a);"></div>
-                    <span class="label">Rakdos</span>
-                </div>
-                <div class="theme-option" data-color="gruul">
-                    <div class="swatch" style="background: linear-gradient(135deg, #d46a5a, #5aad6a);"></div>
-                    <span class="label">Gruul</span>
-                </div>
-                <div class="theme-option" data-color="selesnya">
-                    <div class="swatch" style="background: linear-gradient(135deg, #5aad6a, #b8a88a);"></div>
-                    <span class="label">Selesnya</span>
-                </div>
-                <div class="theme-option" data-color="orzhov">
-                    <div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #3a3a3a);"></div>
-                    <span class="label">Orzhov</span>
-                </div>
-                <div class="theme-option" data-color="izzet">
-                    <div class="swatch" style="background: linear-gradient(135deg, #5a9fd4, #d46a5a);"></div>
-                    <span class="label">Izzet</span>
-                </div>
-                <div class="theme-option" data-color="golgari">
-                    <div class="swatch" style="background: linear-gradient(135deg, #3a3a3a, #5aad6a);"></div>
-                    <span class="label">Golgari</span>
-                </div>
-                <div class="theme-option" data-color="boros">
-                    <div class="swatch" style="background: linear-gradient(135deg, #d46a5a, #b8a88a);"></div>
-                    <span class="label">Boros</span>
-                </div>
-                <div class="theme-option" data-color="simic">
-                    <div class="swatch" style="background: linear-gradient(135deg, #5aad6a, #5a9fd4);"></div>
-                    <span class="label">Simic</span>
-                </div>
-            </div>
+                <!-- Appearance Panel -->
+                <div class="settings-panel active" id="settingsAppearance">
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Dark Mode</div>
+                            <div class="settings-row-desc">Switch between light and dark theme</div>
+                        </div>
+                        <button class="settings-toggle" id="darkModeToggle"></button>
+                    </div>
 
-            <div class="theme-section-label">3-Color — Shards</div>
-            <div class="theme-grid">
-                <div class="theme-option" data-color="esper">
-                    <div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #5a9fd4, #3a3a3a);"></div>
-                    <span class="label">Esper</span>
-                </div>
-                <div class="theme-option" data-color="grixis">
-                    <div class="swatch" style="background: linear-gradient(135deg, #5a9fd4, #3a3a3a, #d46a5a);"></div>
-                    <span class="label">Grixis</span>
-                </div>
-                <div class="theme-option" data-color="jund">
-                    <div class="swatch" style="background: linear-gradient(135deg, #3a3a3a, #d46a5a, #5aad6a);"></div>
-                    <span class="label">Jund</span>
-                </div>
-                <div class="theme-option" data-color="naya">
-                    <div class="swatch" style="background: linear-gradient(135deg, #d46a5a, #5aad6a, #b8a88a);"></div>
-                    <span class="label">Naya</span>
-                </div>
-                <div class="theme-option" data-color="bant">
-                    <div class="swatch" style="background: linear-gradient(135deg, #5aad6a, #b8a88a, #5a9fd4);"></div>
-                    <span class="label">Bant</span>
-                </div>
-            </div>
+                    <div class="settings-section-label">Solid</div>
+                    <div class="settings-themes-grid">
+                        <div class="theme-option" data-color="purple">
+                            <div class="swatch" style="background: #9b7fd4;"></div>
+                            <span class="label">Purple</span>
+                        </div>
+                        <div class="theme-option" data-color="blue">
+                            <div class="swatch" style="background: #5a9fd4;"></div>
+                            <span class="label">Blue</span>
+                        </div>
+                        <div class="theme-option" data-color="red">
+                            <div class="swatch" style="background: #d46a5a;"></div>
+                            <span class="label">Red</span>
+                        </div>
+                        <div class="theme-option" data-color="green">
+                            <div class="swatch" style="background: #5aad6a;"></div>
+                            <span class="label">Green</span>
+                        </div>
+                        <div class="theme-option" data-color="black">
+                            <div class="swatch" style="background: #3a3a3a;"></div>
+                            <span class="label">Black</span>
+                        </div>
+                        <div class="theme-option" data-color="white">
+                            <div class="swatch" style="background: linear-gradient(135deg, #e8e4dc, #f4f0ea);"></div>
+                            <span class="label">White</span>
+                        </div>
+                    </div>
 
-            <div class="theme-section-label">3-Color — Wedges</div>
-            <div class="theme-grid">
-                <div class="theme-option" data-color="mardu">
-                    <div class="swatch" style="background: linear-gradient(135deg, #d46a5a, #b8a88a, #3a3a3a);"></div>
-                    <span class="label">Mardu</span>
-                </div>
-                <div class="theme-option" data-color="temur">
-                    <div class="swatch" style="background: linear-gradient(135deg, #5aad6a, #5a9fd4, #d46a5a);"></div>
-                    <span class="label">Temur</span>
-                </div>
-                <div class="theme-option" data-color="abzan">
-                    <div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #3a3a3a, #5aad6a);"></div>
-                    <span class="label">Abzan</span>
-                </div>
-                <div class="theme-option" data-color="jeskai">
-                    <div class="swatch" style="background: linear-gradient(135deg, #5a9fd4, #d46a5a, #b8a88a);"></div>
-                    <span class="label">Jeskai</span>
-                </div>
-                <div class="theme-option" data-color="sultai">
-                    <div class="swatch" style="background: linear-gradient(135deg, #3a3a3a, #5aad6a, #5a9fd4);"></div>
-                    <span class="label">Sultai</span>
-                </div>
-            </div>
+                    <div class="settings-section-label">2-Color</div>
+                    <div class="settings-themes-grid">
+                        <div class="theme-option" data-color="azorius"><div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #5a9fd4);"></div><span class="label">Azorius</span></div>
+                        <div class="theme-option" data-color="dimir"><div class="swatch" style="background: linear-gradient(135deg, #5a9fd4, #3a3a3a);"></div><span class="label">Dimir</span></div>
+                        <div class="theme-option" data-color="rakdos"><div class="swatch" style="background: linear-gradient(135deg, #3a3a3a, #d46a5a);"></div><span class="label">Rakdos</span></div>
+                        <div class="theme-option" data-color="gruul"><div class="swatch" style="background: linear-gradient(135deg, #d46a5a, #5aad6a);"></div><span class="label">Gruul</span></div>
+                        <div class="theme-option" data-color="selesnya"><div class="swatch" style="background: linear-gradient(135deg, #5aad6a, #b8a88a);"></div><span class="label">Selesnya</span></div>
+                        <div class="theme-option" data-color="orzhov"><div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #3a3a3a);"></div><span class="label">Orzhov</span></div>
+                        <div class="theme-option" data-color="izzet"><div class="swatch" style="background: linear-gradient(135deg, #5a9fd4, #d46a5a);"></div><span class="label">Izzet</span></div>
+                        <div class="theme-option" data-color="golgari"><div class="swatch" style="background: linear-gradient(135deg, #3a3a3a, #5aad6a);"></div><span class="label">Golgari</span></div>
+                        <div class="theme-option" data-color="boros"><div class="swatch" style="background: linear-gradient(135deg, #d46a5a, #b8a88a);"></div><span class="label">Boros</span></div>
+                        <div class="theme-option" data-color="simic"><div class="swatch" style="background: linear-gradient(135deg, #5aad6a, #5a9fd4);"></div><span class="label">Simic</span></div>
+                    </div>
 
-            <div class="theme-section-label">4-Color</div>
-            <div class="theme-grid">
-                <div class="theme-option" data-color="glint-eye">
-                    <div class="swatch" style="background: linear-gradient(135deg, #5a9fd4, #3a3a3a, #d46a5a, #5aad6a);"></div>
-                    <span class="label">Glint-Eye</span>
-                </div>
-                <div class="theme-option" data-color="dune-brood">
-                    <div class="swatch" style="background: linear-gradient(135deg, #3a3a3a, #d46a5a, #5aad6a, #b8a88a);"></div>
-                    <span class="label">Dune-Brood</span>
-                </div>
-                <div class="theme-option" data-color="ink-treader">
-                    <div class="swatch" style="background: linear-gradient(135deg, #d46a5a, #5aad6a, #b8a88a, #5a9fd4);"></div>
-                    <span class="label">Ink-Treader</span>
-                </div>
-                <div class="theme-option" data-color="witch-maw">
-                    <div class="swatch" style="background: linear-gradient(135deg, #5aad6a, #b8a88a, #5a9fd4, #3a3a3a);"></div>
-                    <span class="label">Witch-Maw</span>
-                </div>
-                <div class="theme-option" data-color="yore-tiller">
-                    <div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #5a9fd4, #3a3a3a, #d46a5a);"></div>
-                    <span class="label">Yore-Tiller</span>
-                </div>
-            </div>
+                    <div class="settings-section-label">3-Color — Shards</div>
+                    <div class="settings-themes-grid">
+                        <div class="theme-option" data-color="esper"><div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #5a9fd4, #3a3a3a);"></div><span class="label">Esper</span></div>
+                        <div class="theme-option" data-color="grixis"><div class="swatch" style="background: linear-gradient(135deg, #5a9fd4, #3a3a3a, #d46a5a);"></div><span class="label">Grixis</span></div>
+                        <div class="theme-option" data-color="jund"><div class="swatch" style="background: linear-gradient(135deg, #3a3a3a, #d46a5a, #5aad6a);"></div><span class="label">Jund</span></div>
+                        <div class="theme-option" data-color="naya"><div class="swatch" style="background: linear-gradient(135deg, #d46a5a, #5aad6a, #b8a88a);"></div><span class="label">Naya</span></div>
+                        <div class="theme-option" data-color="bant"><div class="swatch" style="background: linear-gradient(135deg, #5aad6a, #b8a88a, #5a9fd4);"></div><span class="label">Bant</span></div>
+                    </div>
 
-            <div class="theme-section-label">5-Color</div>
-            <div class="theme-grid">
-                <div class="theme-option" data-color="wubrg">
-                    <div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #5a9fd4, #3a3a3a, #d46a5a, #5aad6a);"></div>
-                    <span class="label">WUBRG</span>
+                    <div class="settings-section-label">3-Color — Wedges</div>
+                    <div class="settings-themes-grid">
+                        <div class="theme-option" data-color="mardu"><div class="swatch" style="background: linear-gradient(135deg, #d46a5a, #b8a88a, #3a3a3a);"></div><span class="label">Mardu</span></div>
+                        <div class="theme-option" data-color="temur"><div class="swatch" style="background: linear-gradient(135deg, #5aad6a, #5a9fd4, #d46a5a);"></div><span class="label">Temur</span></div>
+                        <div class="theme-option" data-color="abzan"><div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #3a3a3a, #5aad6a);"></div><span class="label">Abzan</span></div>
+                        <div class="theme-option" data-color="jeskai"><div class="swatch" style="background: linear-gradient(135deg, #5a9fd4, #d46a5a, #b8a88a);"></div><span class="label">Jeskai</span></div>
+                        <div class="theme-option" data-color="sultai"><div class="swatch" style="background: linear-gradient(135deg, #3a3a3a, #5aad6a, #5a9fd4);"></div><span class="label">Sultai</span></div>
+                    </div>
+
+                    <div class="settings-section-label">4-Color</div>
+                    <div class="settings-themes-grid">
+                        <div class="theme-option" data-color="glint-eye"><div class="swatch" style="background: linear-gradient(135deg, #5a9fd4, #3a3a3a, #d46a5a, #5aad6a);"></div><span class="label">Glint-Eye</span></div>
+                        <div class="theme-option" data-color="dune-brood"><div class="swatch" style="background: linear-gradient(135deg, #3a3a3a, #d46a5a, #5aad6a, #b8a88a);"></div><span class="label">Dune-Brood</span></div>
+                        <div class="theme-option" data-color="ink-treader"><div class="swatch" style="background: linear-gradient(135deg, #d46a5a, #5aad6a, #b8a88a, #5a9fd4);"></div><span class="label">Ink-Treader</span></div>
+                        <div class="theme-option" data-color="witch-maw"><div class="swatch" style="background: linear-gradient(135deg, #5aad6a, #b8a88a, #5a9fd4, #3a3a3a);"></div><span class="label">Witch-Maw</span></div>
+                        <div class="theme-option" data-color="yore-tiller"><div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #5a9fd4, #3a3a3a, #d46a5a);"></div><span class="label">Yore-Tiller</span></div>
+                    </div>
+
+                    <div class="settings-section-label">5-Color</div>
+                    <div class="settings-themes-grid">
+                        <div class="theme-option" data-color="wubrg"><div class="swatch" style="background: linear-gradient(135deg, #b8a88a, #5a9fd4, #3a3a3a, #d46a5a, #5aad6a);"></div><span class="label">WUBRG</span></div>
+                    </div>
+                </div>
+
+                <!-- Other Panel -->
+                <div class="settings-panel" id="settingsOther">
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Export Settings</div>
+                            <div class="settings-row-desc">Download all saved data as a JSON file</div>
+                        </div>
+                        <button class="settings-btn" id="exportLocalStorage">Export</button>
+                    </div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Import Settings</div>
+                            <div class="settings-row-desc">Restore saved data from a JSON file</div>
+                        </div>
+                        <button class="settings-btn" id="importLocalStorage">Import</button>
+                        <input type="file" id="importLocalStorageFile" accept=".json" style="display: none;">
+                    </div>
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Wipe All Data</div>
+                            <div class="settings-row-desc">Clear all decks, favorites, custom art, and settings</div>
+                        </div>
+                        <button class="settings-btn danger" id="wipeLocalStorage">Wipe</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3061,6 +3261,7 @@
         let currentAltArtCard = null;
         let altArtMode = 'all'; // 'all' or 'individual'
         let altArtCurrentCopy = 0; // index into the indices array
+        let altArtChanged = false; // track if any art was changed
 
         // Initialize
         function init() {
@@ -3079,7 +3280,7 @@
                 // Migrate and ensure all decks have required properties
                 decks.forEach(deck => {
                     if (!deck.cardBackUrl) {
-                        deck.cardBackUrl = 'https://i.imgur.com/Hg8CwwU.jpeg';
+                        deck.cardBackUrl = 'https://i.imgur.com/tsTuiWN.png';
                     }
                     // Migrate old single commander to commanders array
                     if (deck.commander !== undefined && !deck.commanders) {
@@ -3107,7 +3308,7 @@
                 commanders: [],
                 cards: [],
                 tokens: [],
-                cardBackUrl: 'https://i.imgur.com/Hg8CwwU.jpeg'
+                cardBackUrl: 'https://i.imgur.com/tsTuiWN.png'
             };
         }
 
@@ -3135,9 +3336,6 @@
 
         // Event listeners
         function setupEventListeners() {
-            // Theme toggle
-            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
-
             // Deck management
             document.getElementById('deckSelector').addEventListener('change', (e) => {
                 currentDeckIndex = parseInt(e.target.value);
@@ -3281,8 +3479,10 @@
             // Update preview as user types
             document.getElementById('cardBackUrlInput').addEventListener('input', (e) => {
                 const url = e.target.value.trim();
-                if (url) {
-                    document.getElementById('cardBackPreviewLarge').src = url;
+                if (url && isValidUrl(url)) {
+                    const img = new Image();
+                    img.onload = () => { document.getElementById('cardBackPreviewLarge').src = url; };
+                    img.src = url;
                 }
             });
 
@@ -3327,22 +3527,45 @@
                 updateAltArtPreview();
             });
 
-            // Theme picker
-            document.getElementById('themeSwatch').addEventListener('click', () => {
-                openThemePicker();
+            // Settings modal
+            document.getElementById('settingsBtn').addEventListener('click', openSettings);
+            document.getElementById('closeSettings').addEventListener('click', closeSettings);
+            document.getElementById('settingsOverlay').addEventListener('click', (e) => {
+                if (e.target.id === 'settingsOverlay') closeSettings();
             });
 
-            document.getElementById('themePickerOverlay').addEventListener('click', (e) => {
-                if (e.target.id === 'themePickerOverlay') {
-                    closeThemePicker();
-                }
+            // Settings tabs
+            document.querySelectorAll('.settings-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.settings-tab').forEach(t => t.classList.remove('active'));
+                    document.querySelectorAll('.settings-panel').forEach(p => p.classList.remove('active'));
+                    tab.classList.add('active');
+                    const panelId = 'settings' + tab.dataset.tab.charAt(0).toUpperCase() + tab.dataset.tab.slice(1);
+                    document.getElementById(panelId).classList.add('active');
+                    document.getElementById('settingsTitle').textContent = tab.textContent.trim();
+                });
             });
 
+            // Dark mode toggle in settings
+            document.getElementById('darkModeToggle').addEventListener('click', () => {
+                toggleTheme();
+                updateDarkModeToggle();
+            });
+
+            // Theme options
             document.querySelectorAll('.theme-option').forEach(option => {
                 option.addEventListener('click', () => {
                     setColorTheme(option.dataset.color);
                 });
             });
+
+            // Other settings
+            document.getElementById('exportLocalStorage').addEventListener('click', exportLocalStorageData);
+            document.getElementById('importLocalStorage').addEventListener('click', () => {
+                document.getElementById('importLocalStorageFile').click();
+            });
+            document.getElementById('importLocalStorageFile').addEventListener('change', importLocalStorageData);
+            document.getElementById('wipeLocalStorage').addEventListener('click', wipeLocalStorageData);
         }
 
         function toggleTheme() {
@@ -3350,9 +3573,12 @@
             const currentTheme = body.getAttribute('data-theme');
             const newTheme = currentTheme === 'light' ? 'dark' : 'light';
             body.setAttribute('data-theme', newTheme);
-            document.getElementById('themeToggle').querySelector('.material-icons').textContent = 
-                newTheme === 'light' ? 'dark_mode' : 'light_mode';
             localStorage.setItem('theme', newTheme);
+        }
+
+        function updateDarkModeToggle() {
+            const isDark = document.body.getAttribute('data-theme') === 'dark';
+            document.getElementById('darkModeToggle').classList.toggle('active', isDark);
         }
 
         // Load saved theme on page load
@@ -3361,68 +3587,18 @@
             const savedColor = localStorage.getItem('themeColor');
             if (savedTheme) {
                 document.body.setAttribute('data-theme', savedTheme);
-                document.getElementById('themeToggle').querySelector('.material-icons').textContent = 
-                    savedTheme === 'light' ? 'dark_mode' : 'light_mode';
             }
             if (savedColor) {
                 document.body.setAttribute('data-color', savedColor);
             }
             updateThemeOptionActive();
-            updateThemeSwatchBtn();
+            updateDarkModeToggle();
         }
-
-        // Theme swatch backgrounds for the header button
-        const themeSwatchStyles = {
-            purple: '#9b7fd4',
-            blue: '#5a9fd4',
-            red: '#d46a5a',
-            green: '#5aad6a',
-            black: '#3a3a3a',
-            white: 'linear-gradient(135deg, #e8e4dc, #f4f0ea)',
-            azorius: 'linear-gradient(135deg, #b8a88a, #5a9fd4)',
-            dimir: 'linear-gradient(135deg, #5a9fd4, #3a3a3a)',
-            rakdos: 'linear-gradient(135deg, #3a3a3a, #d46a5a)',
-            gruul: 'linear-gradient(135deg, #d46a5a, #5aad6a)',
-            selesnya: 'linear-gradient(135deg, #5aad6a, #b8a88a)',
-            orzhov: 'linear-gradient(135deg, #b8a88a, #3a3a3a)',
-            izzet: 'linear-gradient(135deg, #5a9fd4, #d46a5a)',
-            golgari: 'linear-gradient(135deg, #3a3a3a, #5aad6a)',
-            boros: 'linear-gradient(135deg, #d46a5a, #b8a88a)',
-            simic: 'linear-gradient(135deg, #5aad6a, #5a9fd4)',
-            esper: 'linear-gradient(135deg, #b8a88a, #5a9fd4, #3a3a3a)',
-            grixis: 'linear-gradient(135deg, #5a9fd4, #3a3a3a, #d46a5a)',
-            jund: 'linear-gradient(135deg, #3a3a3a, #d46a5a, #5aad6a)',
-            naya: 'linear-gradient(135deg, #d46a5a, #5aad6a, #b8a88a)',
-            bant: 'linear-gradient(135deg, #5aad6a, #b8a88a, #5a9fd4)',
-            mardu: 'linear-gradient(135deg, #d46a5a, #b8a88a, #3a3a3a)',
-            temur: 'linear-gradient(135deg, #5aad6a, #5a9fd4, #d46a5a)',
-            abzan: 'linear-gradient(135deg, #b8a88a, #3a3a3a, #5aad6a)',
-            jeskai: 'linear-gradient(135deg, #5a9fd4, #d46a5a, #b8a88a)',
-            sultai: 'linear-gradient(135deg, #3a3a3a, #5aad6a, #5a9fd4)',
-            'glint-eye': 'linear-gradient(135deg, #5a9fd4, #3a3a3a, #d46a5a, #5aad6a)',
-            'dune-brood': 'linear-gradient(135deg, #3a3a3a, #d46a5a, #5aad6a, #b8a88a)',
-            'ink-treader': 'linear-gradient(135deg, #d46a5a, #5aad6a, #b8a88a, #5a9fd4)',
-            'witch-maw': 'linear-gradient(135deg, #5aad6a, #b8a88a, #5a9fd4, #3a3a3a)',
-            'yore-tiller': 'linear-gradient(135deg, #b8a88a, #5a9fd4, #3a3a3a, #d46a5a)',
-            wubrg: 'linear-gradient(135deg, #b8a88a, #5a9fd4, #3a3a3a, #d46a5a, #5aad6a)'
-        };
 
         function setColorTheme(color) {
             document.body.setAttribute('data-color', color);
             localStorage.setItem('themeColor', color);
             updateThemeOptionActive();
-            updateThemeSwatchBtn();
-        }
-
-        function updateThemeSwatchBtn() {
-            const currentColor = document.body.getAttribute('data-color') || 'purple';
-            const style = themeSwatchStyles[currentColor] || themeSwatchStyles.purple;
-            const btn = document.getElementById('themeSwatch');
-            if (style.includes('gradient')) {
-                btn.style.background = style;
-            } else {
-                btn.style.background = style;
-            }
         }
 
         function updateThemeOptionActive() {
@@ -3432,13 +3608,72 @@
             });
         }
 
-        function openThemePicker() {
+        function openSettings() {
+            updateDarkModeToggle();
             updateThemeOptionActive();
-            document.getElementById('themePickerOverlay').classList.add('active');
+            document.getElementById('settingsOverlay').classList.add('active');
         }
 
-        function closeThemePicker() {
-            document.getElementById('themePickerOverlay').classList.remove('active');
+        function closeSettings() {
+            document.getElementById('settingsOverlay').classList.remove('active');
+        }
+
+        function exportLocalStorageData() {
+            const data = {};
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('commander2tts') || key === 'theme' || key === 'themeColor') {
+                    data[key] = localStorage.getItem(key);
+                }
+            }
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'commander2tts-backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
+            showNotification('Settings exported successfully', 'success');
+        }
+
+        function importLocalStorageData(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                try {
+                    const data = JSON.parse(event.target.result);
+                    Object.entries(data).forEach(([key, value]) => {
+                        localStorage.setItem(key, value);
+                    });
+                    showNotification('Settings imported. Reloading...', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                } catch (err) {
+                    showNotification('Invalid settings file', 'error');
+                }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        }
+
+        function wipeLocalStorageData() {
+            showConfirmDialog(
+                'Wipe All Data',
+                'This will delete all decks, favorites, custom art, and settings.<br><br>This action cannot be undone.',
+                'Wipe All Data',
+                () => {
+                    const keysToRemove = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                        const key = localStorage.key(i);
+                        if (key.startsWith('commander2tts') || key === 'theme' || key === 'themeColor') {
+                            keysToRemove.push(key);
+                        }
+                    }
+                    keysToRemove.forEach(key => localStorage.removeItem(key));
+                    showNotification('All data wiped. Reloading...', 'success');
+                    setTimeout(() => location.reload(), 1000);
+                }
+            );
         }
 
         // Scryfall API
@@ -4693,6 +4928,23 @@
             } catch { return []; }
         }
 
+        function isValidUrl(str) {
+            try {
+                const url = new URL(str);
+                return url.protocol === 'http:' || url.protocol === 'https:';
+            } catch { return false; }
+        }
+
+        function isValidImageUrl(url) {
+            return new Promise((resolve) => {
+                if (!isValidUrl(url)) { resolve(false); return; }
+                const img = new Image();
+                img.onload = () => resolve(true);
+                img.onerror = () => resolve(false);
+                img.src = url;
+            });
+        }
+
         function isScryfallUrl(url) {
             return url && (url.includes('scryfall.io') || url.includes('scryfall.com'));
         }
@@ -4708,11 +4960,61 @@
             } catch {}
         }
 
+        function removeCustomArt(cardName, imageUrl) {
+            try {
+                const all = JSON.parse(localStorage.getItem('commander2tts_custom_art') || '{}');
+                if (all[cardName]) {
+                    all[cardName] = all[cardName].filter(u => u !== imageUrl);
+                    if (all[cardName].length === 0) delete all[cardName];
+                    localStorage.setItem('commander2tts_custom_art', JSON.stringify(all));
+                }
+                // Also remove from favorites if present
+                const favorites = getAltArtFavorites();
+                if (favorites[cardName]) {
+                    favorites[cardName] = favorites[cardName].filter(u => u !== imageUrl);
+                    if (favorites[cardName].length === 0) delete favorites[cardName];
+                    saveAltArtFavorites(favorites);
+                }
+            } catch {}
+        }
+
+        function showConfirmDialog(title, message, confirmLabel, onConfirm) {
+            const existing = document.getElementById('genericConfirmModal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.id = 'genericConfirmModal';
+            modal.style.zIndex = '3000';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 400px; padding: 1.5rem;">
+                    <button class="modal-close" id="closeGenericConfirm">✕</button>
+                    <h2 class="modal-title" style="font-size: 1.2rem; margin-bottom: 0.75rem;">${title}</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;">${message}</p>
+                    <div class="card-back-actions" style="gap: 1rem;">
+                        <button class="card-back-btn" id="cancelGenericConfirm" style="background: var(--bg-secondary); color: var(--text-primary);">Cancel</button>
+                        <button class="card-back-btn" id="doGenericConfirm" style="background: #e74c3c; border-color: #e74c3c;">${confirmLabel}</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const close = () => { modal.remove(); };
+            modal.querySelector('#closeGenericConfirm').addEventListener('click', close);
+            modal.querySelector('#cancelGenericConfirm').addEventListener('click', close);
+            modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+            modal.querySelector('#doGenericConfirm').addEventListener('click', () => {
+                close();
+                onConfirm();
+            });
+        }
+
         function createAltArtEntry(imageUrl, label, cardName) {
             const div = document.createElement('div');
             div.className = 'alt-art-option';
             const isFav = isArtFavorited(cardName, imageUrl);
-            div.innerHTML = `<button class="alt-art-fav-btn ${isFav ? 'favorited' : ''}" title="Favorite"><span class="material-icons">${isFav ? 'star' : 'star_border'}</span></button><img src="${imageUrl}" alt="${label}"><div class="set-info">${label}</div>`;
+            const isCustom = label === 'Custom Art';
+            div.innerHTML = `<button class="alt-art-fav-btn ${isFav ? 'favorited' : ''}" title="Favorite"><span class="material-icons">${isFav ? 'star' : 'star_border'}</span></button>${isCustom ? '<button class="alt-art-remove-btn" title="Remove custom art">✕</button>' : ''}<img src="${imageUrl}" alt="${label}"><div class="set-info">${label}</div>`;
             // Clicking the card image selects it
             div.querySelector('img').addEventListener('click', () => selectAltArt(imageUrl));
             div.querySelector('.set-info').addEventListener('click', () => selectAltArt(imageUrl));
@@ -4727,6 +5029,17 @@
                 // Re-sort the grid
                 reorderAltArtGrid(cardName);
             });
+            // X button for custom art
+            if (isCustom) {
+                div.querySelector('.alt-art-remove-btn').addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    showConfirmDialog('Remove Custom Art', 'Are you sure you want to remove this custom art?', 'Remove', () => {
+                        removeCustomArt(cardName, imageUrl);
+                        div.remove();
+                        showNotification('Custom art removed', 'success');
+                    });
+                });
+            }
             div.dataset.imageUrl = imageUrl;
             return div;
         }
@@ -4761,6 +5074,7 @@
             currentAltArtCard = { card, isCommander, isToken, count, indices };
             altArtMode = 'all';
             altArtCurrentCopy = 0;
+            altArtChanged = false;
 
             const modal = document.getElementById('altArtModal');
             const grid = document.getElementById('altArtGrid');
@@ -4898,6 +5212,7 @@
 
             // Update the big preview
             document.getElementById('altArtPreviewImg').src = imageUrl;
+            altArtChanged = true;
 
             if (isCommander) {
                 const cmd = deck.commanders.find(c => c.id === card.id);
@@ -4965,6 +5280,7 @@
                                 }
                             });
                             saveDecks();
+                            altArtChanged = true;
                         }
                         document.getElementById('altArtPreviewImg').src = firstArt;
                     } else {
@@ -4994,11 +5310,20 @@
             }
         }
 
-        function useCustomUrl() {
+        async function useCustomUrl() {
             const input = document.getElementById('customUrlInput');
             const url = input.value.trim();
             if (!url) {
-                showNotification('Please enter a valid image URL', 'warning');
+                showNotification('Please enter an image URL', 'warning');
+                return;
+            }
+            if (!isValidUrl(url)) {
+                showNotification('Please enter a valid URL (starting with http:// or https://)', 'warning');
+                return;
+            }
+            const valid = await isValidImageUrl(url);
+            if (!valid) {
+                showNotification('URL does not point to a valid image', 'warning');
                 return;
             }
 
@@ -5022,15 +5347,39 @@
         function closeAltArtModal() {
             document.getElementById('altArtModal').classList.remove('active');
             document.getElementById('customUrlInput').value = '';
-            currentAltArtCard = null;
             
-            // Re-render in case individual mode made changes without closing
-            const searchInput = document.getElementById('deckSearch');
-            const currentQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
-            renderDeck();
-            if (currentQuery) {
-                highlightCards(currentQuery);
+            if (altArtChanged && currentAltArtCard) {
+                const { card, isCommander, isToken, indices } = currentAltArtCard;
+                const deck = getCurrentDeck();
+                
+                // Find the specific card element in the DOM and update its image
+                const cardElements = document.querySelectorAll('.deck-card');
+                for (const el of cardElements) {
+                    const elIds = el.dataset.cardIds ? JSON.parse(el.dataset.cardIds) : null;
+                    const matches = elIds 
+                        ? elIds.includes(card.id) 
+                        : el.dataset.cardId === card.id;
+                    
+                    if (matches) {
+                        const img = el.querySelector('.deck-card-image');
+                        if (img) {
+                            if (indices && indices.length > 0) {
+                                const targetArray = isToken ? deck.tokens : deck.cards;
+                                img.src = targetArray[indices[0]]?.image_url || card.image_url;
+                            } else if (isCommander) {
+                                const cmd = deck.commanders.find(c => c.id === card.id);
+                                img.src = cmd ? cmd.image_url : card.image_url;
+                            } else {
+                                img.src = card.image_url;
+                            }
+                        }
+                        break;
+                    }
+                }
             }
+            
+            currentAltArtCard = null;
+            altArtChanged = false;
         }
 
         // Card preview system
@@ -5293,7 +5642,7 @@
         }
 
         // Export to TTS
-        function exportToTTS() {
+        async function exportToTTS() {
             const deck = getCurrentDeck();
             
             if (!deck.commanders || deck.commanders.length === 0) {
@@ -5309,9 +5658,15 @@
             // Save the card back URL from the modal
             const newCardBackUrl = document.getElementById('cardBackUrlInput').value.trim();
             if (newCardBackUrl) {
-                deck.cardBackUrl = newCardBackUrl;
-                saveDecks();
-                updateCardBackPreview();
+                const valid = await isValidImageUrl(newCardBackUrl);
+                if (valid) {
+                    deck.cardBackUrl = newCardBackUrl;
+                    saveDecks();
+                    updateCardBackPreview();
+                } else {
+                    showNotification('Card back URL is not a valid image.', 'warning');
+                    return;
+                }
             }
 
             const filename = document.getElementById('filenameInput').value || 'commander-deck.json';
@@ -5374,7 +5729,7 @@
                 // Add to CustomDeck
                 mainDeckCustomDeck[deckKey] = {
                     FaceURL: card.image_url,
-                    BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
+                    BackURL: deck.cardBackUrl || "https://i.imgur.com/tsTuiWN.png",
                     NumHeight: 1,
                     NumWidth: 1,
                     BackIsHidden: true,
@@ -5439,7 +5794,7 @@
                     CustomDeck: {
                         "1": {
                             FaceURL: commander.image_url,
-                            BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
+                            BackURL: deck.cardBackUrl || "https://i.imgur.com/tsTuiWN.png",
                             NumHeight: 1,
                             NumWidth: 1,
                             BackIsHidden: true,
@@ -5488,7 +5843,7 @@
                     
                     tokenCustomDeck[deckKey] = {
                         FaceURL: token.image_url,
-                        BackURL: deck.cardBackUrl || "https://i.imgur.com/Hg8CwwU.jpeg",
+                        BackURL: deck.cardBackUrl || "https://i.imgur.com/tsTuiWN.png",
                         NumHeight: 1,
                         NumWidth: 1,
                         BackIsHidden: true,
@@ -5571,7 +5926,7 @@
 
         function openExportModal() {
             const deck = getCurrentDeck();
-            const currentUrl = deck.cardBackUrl || 'https://i.imgur.com/Hg8CwwU.jpeg';
+            const currentUrl = deck.cardBackUrl || 'https://i.imgur.com/tsTuiWN.png';
             
             // Set current values in modal
             document.getElementById('cardBackUrlInput').value = currentUrl;
@@ -6030,7 +6385,7 @@
         }
 
         function resetCardBackToDefault() {
-            const defaultUrl = 'https://i.imgur.com/Hg8CwwU.jpeg';
+            const defaultUrl = 'https://i.imgur.com/tsTuiWN.png';
             document.getElementById('cardBackUrlInput').value = defaultUrl;
             document.getElementById('cardBackPreviewLarge').src = defaultUrl;
         }
@@ -6120,7 +6475,7 @@
         function updateCardBackPreview() {
             const deck = getCurrentDeck();
             const preview = document.getElementById('cardBackPreview');
-            preview.src = deck.cardBackUrl || 'https://i.imgur.com/Hg8CwwU.jpeg';
+            preview.src = deck.cardBackUrl || 'https://i.imgur.com/tsTuiWN.png';
         }
 
         // Initialize app
