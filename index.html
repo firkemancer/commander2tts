@@ -960,11 +960,18 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 2rem;
+            gap: 1.5rem;
             border-bottom: 2px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 1000;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            flex-shrink: 0;
         }
 
         .header h1 {
@@ -988,8 +995,6 @@
             display: flex;
             gap: 0.5rem;
             align-items: center;
-            flex: 1;
-            max-width: 700px;
         }
 
         .moxfield-input-main {
@@ -1042,6 +1047,7 @@
             display: flex;
             gap: 0.75rem;
             align-items: center;
+            padding-right: 1rem;
         }
 
         .theme-swatch-btn {
@@ -1092,8 +1098,18 @@
             border-radius: 50px;
             font-size: 1rem;
             cursor: pointer;
-            width: auto;
-            min-width: auto;
+            width: 40ch;
+            min-width: 40ch;
+            max-width: 50ch;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23888' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.8rem center;
         }
 
         .container {
@@ -2597,11 +2613,13 @@
         })();
     </script>
     <div class="header">
-		<img src="logo.png" width="420" height="45">
-        <!-- Import Controls -->
-        <div class="moxfield-import-section">
-            <button class="import-btn-main" id="importDeckBtn">Import Deck</button>
-            <button class="manual-btn" id="manualBtn">Search Cards</button>
+        <div class="header-left">
+            <img src="logo.png" width="420" height="45">
+            <!-- Import Controls -->
+            <div class="moxfield-import-section">
+                <button class="import-btn-main" id="importDeckBtn">Import Deck</button>
+                <button class="manual-btn" id="manualBtn">Search Cards</button>
+            </div>
         </div>
         
         <div class="header-controls">
@@ -3061,6 +3079,7 @@
         let currentAltArtCard = null;
         let altArtMode = 'all'; // 'all' or 'individual'
         let altArtCurrentCopy = 0; // index into the indices array
+        let altArtChanged = false; // track if any art was changed
 
         // Initialize
         function init() {
@@ -4761,6 +4780,7 @@
             currentAltArtCard = { card, isCommander, isToken, count, indices };
             altArtMode = 'all';
             altArtCurrentCopy = 0;
+            altArtChanged = false;
 
             const modal = document.getElementById('altArtModal');
             const grid = document.getElementById('altArtGrid');
@@ -4898,6 +4918,7 @@
 
             // Update the big preview
             document.getElementById('altArtPreviewImg').src = imageUrl;
+            altArtChanged = true;
 
             if (isCommander) {
                 const cmd = deck.commanders.find(c => c.id === card.id);
@@ -4965,6 +4986,7 @@
                                 }
                             });
                             saveDecks();
+                            altArtChanged = true;
                         }
                         document.getElementById('altArtPreviewImg').src = firstArt;
                     } else {
@@ -5022,15 +5044,39 @@
         function closeAltArtModal() {
             document.getElementById('altArtModal').classList.remove('active');
             document.getElementById('customUrlInput').value = '';
-            currentAltArtCard = null;
             
-            // Re-render in case individual mode made changes without closing
-            const searchInput = document.getElementById('deckSearch');
-            const currentQuery = searchInput ? searchInput.value.trim().toLowerCase() : '';
-            renderDeck();
-            if (currentQuery) {
-                highlightCards(currentQuery);
+            if (altArtChanged && currentAltArtCard) {
+                const { card, isCommander, isToken, indices } = currentAltArtCard;
+                const deck = getCurrentDeck();
+                
+                // Find the specific card element in the DOM and update its image
+                const cardElements = document.querySelectorAll('.deck-card');
+                for (const el of cardElements) {
+                    const elIds = el.dataset.cardIds ? JSON.parse(el.dataset.cardIds) : null;
+                    const matches = elIds 
+                        ? elIds.includes(card.id) 
+                        : el.dataset.cardId === card.id;
+                    
+                    if (matches) {
+                        const img = el.querySelector('.deck-card-image');
+                        if (img) {
+                            if (indices && indices.length > 0) {
+                                const targetArray = isToken ? deck.tokens : deck.cards;
+                                img.src = targetArray[indices[0]]?.image_url || card.image_url;
+                            } else if (isCommander) {
+                                const cmd = deck.commanders.find(c => c.id === card.id);
+                                img.src = cmd ? cmd.image_url : card.image_url;
+                            } else {
+                                img.src = card.image_url;
+                            }
+                        }
+                        break;
+                    }
+                }
             }
+            
+            currentAltArtCard = null;
+            altArtChanged = false;
         }
 
         // Card preview system
