@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://firkemancer.github.io/commander2tts/sitemap.xml
