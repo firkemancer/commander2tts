@@ -2340,6 +2340,13 @@
             padding: 0.5rem 0;
         }
 
+        /* When commander color-identity matching is on, manual theme picks are disabled */
+        body.themes-locked .settings-themes-grid,
+        body.themes-locked .settings-section-label {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
         .settings-btn {
             padding: 0.6rem 1.2rem;
             border: 2px solid var(--border);
@@ -2806,6 +2813,408 @@
             outline: none;
             border-color: var(--accent);
         }
+
+        /* ═══ Stats Button ═══ */
+        .stats-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.6rem;
+            font-weight: 300;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .stats-btn .material-icons {
+            font-size: 24px;
+        }
+
+        .stats-btn:hover {
+            opacity: 0.85;
+            transform: scale(1.1);
+        }
+
+        .stats-btn.active {
+            box-shadow: 0 0 0 3px var(--bg-primary), 0 0 0 5px var(--accent);
+        }
+
+        /* ═══ Stats Sidebar ═══ */
+        .stats-sidebar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 320px;
+            max-width: 90%;
+            background: var(--bg-card);
+            border-left: 2px solid var(--border);
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.25s ease;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .stats-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .stats-sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.2rem;
+            border-bottom: 2px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .stats-sidebar-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+        }
+
+        .stats-sidebar-close {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.2s;
+        }
+
+        .stats-sidebar-close .material-icons {
+            font-size: 18px;
+        }
+
+        .stats-sidebar-close:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .stats-sidebar-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.8rem 1rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .stats-empty {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Stats Sections */
+        .stats-section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 0.4rem;
+        }
+
+        /* Land Count */
+        .stats-land-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.8rem;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            border: 2px solid var(--border);
+        }
+
+        .stats-land-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .stats-land-count {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+
+        .stats-land-indicator {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 0.1rem 0.4rem;
+            border-radius: 4px;
+            margin-left: 0.4rem;
+        }
+
+        .stats-land-indicator.low {
+            background: rgba(231, 76, 60, 0.15);
+            color: #e74c3c;
+        }
+
+        .stats-land-indicator.ok {
+            background: rgba(39, 174, 96, 0.15);
+            color: #27ae60;
+        }
+
+        .stats-land-indicator.high {
+            background: rgba(243, 156, 18, 0.15);
+            color: #f39c12;
+        }
+
+        /* Mana Curve — Vertical */
+        .stats-curve-avg {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+
+        .stats-curve-chart {
+            display: flex;
+            align-items: flex-end;
+            gap: 4px;
+            height: 90px;
+            padding-bottom: 20px;
+            position: relative;
+        }
+
+        .stats-curve-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            position: relative;
+        }
+
+        .stats-curve-bar-wrap {
+            flex: 1;
+            width: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .stats-curve-vbar {
+            width: 80%;
+            max-width: 28px;
+            background: var(--accent);
+            border-radius: 3px 3px 0 0;
+            transition: height 0.3s ease;
+            min-height: 0;
+            position: relative;
+        }
+
+        .stats-curve-vbar-count {
+            position: absolute;
+            top: -15px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            font-size: 0.65rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .stats-curve-xlabel {
+            position: absolute;
+            bottom: -18px;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--text-secondary);
+        }
+
+        /* Card Types */
+        .stats-type-list {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .stats-type-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.25rem 0;
+        }
+
+        .stats-type-name {
+            font-size: 0.8rem;
+            color: var(--text-primary);
+        }
+
+        .stats-type-count {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent);
+            min-width: 20px;
+            text-align: right;
+        }
+
+        .stats-type-bar-bg {
+            flex: 1;
+            height: 5px;
+            background: var(--bg-primary);
+            border-radius: 3px;
+            margin: 0 0.6rem;
+            overflow: hidden;
+        }
+
+        .stats-type-bar {
+            height: 100%;
+            background: var(--accent);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        /* Color Distribution */
+        .stats-color-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .stats-color-item {
+            display: flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.3rem 0.5rem;
+            background: var(--bg-primary);
+            border-radius: 6px;
+        }
+
+        .stats-color-pip {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid rgba(0,0,0,0.15);
+        }
+
+        .stats-color-pip.w { background: #f9faf4; border-color: #d4c5a0; }
+        .stats-color-pip.u { background: #0e68ab; border-color: #0a4f82; }
+        .stats-color-pip.b { background: #2b2a2a; border-color: #1a1a1a; }
+        .stats-color-pip.r { background: #d3202a; border-color: #a8181f; }
+        .stats-color-pip.g { background: #00733e; border-color: #005a30; }
+        .stats-color-pip.c { background: #a8a8a8; border-color: #888; }
+        .stats-color-pip.m { background: linear-gradient(135deg, #f9faf4, #0e68ab, #2b2a2a, #d3202a, #00733e); border-color: #c5a028; }
+
+        .stats-color-info {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .stats-color-label {
+            font-size: 0.6rem;
+            color: var(--text-secondary);
+            line-height: 1;
+        }
+
+        .stats-color-count {
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            line-height: 1.2;
+        }
+
+        /* Deck Total Summary */
+        .stats-total-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem 0.8rem;
+            background: var(--bg-primary);
+            border-radius: 10px;
+            border: 2px solid var(--border);
+        }
+
+        .stats-total-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 600;
+        }
+
+        .stats-total-count {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        /* Validation Issues */
+        .stats-issues-list {
+            display: flex;
+            flex-direction: column;
+            gap: 3px;
+        }
+
+        .stats-issue-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.4rem;
+            padding: 0.35rem 0.6rem;
+            border-radius: 6px;
+            background: rgba(231, 76, 60, 0.08);
+            border: 1px solid rgba(231, 76, 60, 0.2);
+        }
+
+        .stats-issue-item.warning {
+            background: rgba(243, 156, 18, 0.08);
+            border-color: rgba(243, 156, 18, 0.2);
+        }
+
+        .stats-issue-icon {
+            font-size: 16px;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .stats-issue-item.error .stats-issue-icon {
+            color: #e74c3c;
+        }
+
+        .stats-issue-item.warning .stats-issue-icon {
+            color: #f39c12;
+        }
+
+        .stats-issue-text {
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .stats-issue-message {
+            font-size: 0.78rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.3;
+        }
+
+        .stats-issue-detail {
+            font-size: 0.68rem;
+            color: var(--text-secondary);
+            line-height: 1.2;
+        }
     </style>
 </head>
 <body data-theme="light" data-color="purple">
@@ -2814,11 +3223,17 @@
         (function() {
             const savedTheme = localStorage.getItem('theme');
             const savedColor = localStorage.getItem('themeColor');
+            const matchCI = localStorage.getItem('commander2tts_themeMatchCI') === 'true';
             if (savedTheme) {
                 document.body.setAttribute('data-theme', savedTheme);
             }
-            if (savedColor) {
+            // If commander color matching is on, leave data-color at its default
+            // until renderDeck() applies the correct deck-based theme.
+            if (savedColor && !matchCI) {
                 document.body.setAttribute('data-color', savedColor);
+            }
+            if (matchCI) {
+                document.body.classList.add('themes-locked');
             }
         })();
     </script>
@@ -2837,11 +3252,15 @@
                 <option value="0">Deck 1</option>
             </select>
             <button class="new-deck-btn" id="newDeckBtn"><span class="material-icons">add</span></button>
+            <button class="stats-btn" id="statsBtn" title="Deck Statistics"><span class="material-icons">bar_chart</span></button>
             <button class="deck-menu-btn" id="deckMenuBtn">
                 <span class="material-icons">more_vert</span>
                 <div class="deck-menu" id="deckMenu">
                     <div class="deck-menu-item" id="renameDeckBtn">
                         <span>Rename Deck</span>
+                    </div>
+                    <div class="deck-menu-item" id="duplicateDeckBtn">
+                        <span>Duplicate Deck</span>
                     </div>
                     <div class="deck-menu-item" id="exportDeckBtn">
                         <span>Export to TTS</span>
@@ -2941,6 +3360,18 @@
             </div>
 
             </div><!-- end deck-content-scroll -->
+
+            <!-- Stats Sidebar -->
+            <div class="stats-sidebar" id="statsSidebar">
+                <div class="stats-sidebar-header">
+                    <h3 class="stats-sidebar-title"><span class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 0.3rem;">bar_chart</span>Statistics</h3>
+                    <button class="stats-sidebar-close" id="statsClose"><span class="material-icons">close</span></button>
+                </div>
+                <div class="stats-sidebar-body" id="statsBody">
+                    <div class="stats-empty">Import or build a deck to see statistics</div>
+                </div>
+            </div>
+
         </div>
     </div>
 
@@ -3088,6 +3519,14 @@
                             <div class="settings-row-desc">Switch between light and dark theme</div>
                         </div>
                         <button class="settings-toggle" id="darkModeToggle"></button>
+                    </div>
+
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Match Commander Colors</div>
+                            <div class="settings-row-desc">Auto-set theme from the active deck's commander color identity</div>
+                        </div>
+                        <button class="settings-toggle" id="matchCommanderColorsToggle"></button>
                     </div>
 
                     <div class="settings-section-label">Solid</div>
@@ -3270,6 +3709,8 @@
             setupEventListeners();
             renderDeck();
             updateCardBackPreview();
+            // Silent background migration for color_identity
+            migrateColorIdentity();
         }
 
         // Local storage management
@@ -3296,6 +3737,70 @@
                 decks.push(createNewDeck());
             }
             updateDeckSelector();
+        }
+
+        // Silent one-time migration: backfill color_identity from Scryfall for old cards
+        async function migrateColorIdentity() {
+            // Collect all card IDs across all decks that are missing color_identity
+            const idsToFetch = new Set();
+            const cardRefs = []; // { deckIdx, arrayName, cardIdx, id }
+
+            decks.forEach((deck, di) => {
+                ['commanders', 'cards'].forEach(arr => {
+                    (deck[arr] || []).forEach((card, ci) => {
+                        if (!card.color_identity && card.id) {
+                            idsToFetch.add(card.id);
+                            cardRefs.push({ deckIdx: di, arrayName: arr, cardIdx: ci, id: card.id });
+                        }
+                    });
+                });
+            });
+
+            if (idsToFetch.size === 0) return;
+
+            console.log(`Migrating color_identity for ${idsToFetch.size} unique cards...`);
+
+            // Batch fetch by ID via /cards/collection
+            const idMap = new Map(); // id -> color_identity
+            const ids = [...idsToFetch];
+
+            for (let i = 0; i < ids.length; i += 75) {
+                const batch = ids.slice(i, i + 75);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                try {
+                    const response = await scryfallFetchWithRetry(
+                        'https://api.scryfall.com/cards/collection',
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ identifiers: batch.map(id => ({ id })) })
+                        }
+                    );
+                    if (response.ok) {
+                        const data = await response.json();
+                        (data.data || []).forEach(card => {
+                            idMap.set(card.id, card.color_identity || []);
+                        });
+                    }
+                } catch (e) {
+                    console.warn('Color identity migration batch failed:', e);
+                }
+            }
+
+            // Backfill into deck data
+            let updated = 0;
+            cardRefs.forEach(ref => {
+                const card = decks[ref.deckIdx][ref.arrayName][ref.cardIdx];
+                if (card && idMap.has(ref.id)) {
+                    card.color_identity = idMap.get(ref.id);
+                    updated++;
+                }
+            });
+
+            if (updated > 0) {
+                saveDecks();
+                console.log(`Migrated color_identity for ${updated} cards`);
+            }
         }
 
         function saveDecks() {
@@ -3444,6 +3949,7 @@
             document.getElementById('exportDeckBtn').addEventListener('click', openExportModal);
             document.getElementById('deleteDeckBtn').addEventListener('click', openDeleteDeckModal);
             document.getElementById('renameDeckBtn').addEventListener('click', openRenameDeckModal);
+            document.getElementById('duplicateDeckBtn').addEventListener('click', duplicateCurrentDeck);
 
             // Delete Deck Confirmation Modal
             document.getElementById('closeDeleteDeckModal').addEventListener('click', closeDeleteDeckModal);
@@ -3534,6 +4040,10 @@
                 if (e.target.id === 'settingsOverlay') closeSettings();
             });
 
+            // Stats sidebar
+            document.getElementById('statsBtn').addEventListener('click', toggleStatsSidebar);
+            document.getElementById('statsClose').addEventListener('click', closeStatsSidebar);
+
             // Settings tabs
             document.querySelectorAll('.settings-tab').forEach(tab => {
                 tab.addEventListener('click', () => {
@@ -3552,6 +4062,8 @@
                 updateDarkModeToggle();
             });
 
+            document.getElementById('matchCommanderColorsToggle').addEventListener('click', toggleMatchCommanderColors);
+
             // Theme options
             document.querySelectorAll('.theme-option').forEach(option => {
                 option.addEventListener('click', () => {
@@ -3566,7 +4078,82 @@
             });
             document.getElementById('importLocalStorageFile').addEventListener('change', importLocalStorageData);
             document.getElementById('wipeLocalStorage').addEventListener('click', wipeLocalStorageData);
+
+            // ===== Keyboard shortcuts =====
+            document.addEventListener('keydown', handleGlobalKeydown);
         }
+
+        // Returns true if the user is currently typing in an editable element.
+        // Used to avoid hijacking keys while the user is composing text.
+        function isTypingInInput(target) {
+            if (!target) return false;
+            const tag = target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+            if (target.isContentEditable) return true;
+            return false;
+        }
+
+        // Closes the topmost open modal/overlay. Returns true if something was closed.
+        // Loading overlay is intentionally excluded — it's not user-dismissable.
+        function closeTopmostModal() {
+            // Dynamic modals first (z-index: 3000) — they're always on top when present
+            const dynamicModal = document.getElementById('genericConfirmModal')
+                              || document.getElementById('importChoiceModal');
+            if (dynamicModal) {
+                dynamicModal.remove();
+                return true;
+            }
+
+            // Static modals, ordered by likelihood of being layered on top
+            const staticModalClosers = [
+                { id: 'altArtModal', close: closeAltArtModal },
+                { id: 'commanderConfirmModal', close: closeCommanderConfirmModal },
+                { id: 'exportModal', close: closeExportModal },
+                { id: 'importDeckModal', close: closeImportDeckModal },
+                { id: 'renameDeckModal', close: closeRenameDeckModal },
+                { id: 'deleteDeckModal', close: closeDeleteDeckModal },
+                { id: 'settingsOverlay', close: closeSettings }
+            ];
+            for (const { id, close } of staticModalClosers) {
+                const el = document.getElementById(id);
+                if (el && el.classList.contains('active')) {
+                    close();
+                    return true;
+                }
+            }
+
+            // Stats sidebar — slides in from the right, treat like a modal for Esc purposes
+            const statsBtn = document.getElementById('statsBtn');
+            if (statsBtn && statsBtn.classList.contains('active')) {
+                closeStatsSidebar();
+                return true;
+            }
+
+            return false;
+        }
+
+        function handleGlobalKeydown(e) {
+            // Esc: close topmost modal/overlay. Works even from inside inputs
+            // (so you can hit Esc to bail out of, say, the rename modal).
+            if (e.key === 'Escape') {
+                if (closeTopmostModal()) {
+                    e.preventDefault();
+                }
+                return;
+            }
+
+            // '/': focus the deck search bar. Only when not already typing somewhere.
+            if (e.key === '/' && !isTypingInInput(e.target)) {
+                const deckSearch = document.getElementById('deckSearch');
+                if (deckSearch) {
+                    e.preventDefault(); // stop the '/' from being typed into the input
+                    deckSearch.focus();
+                    deckSearch.select();
+                }
+                return;
+            }
+        }
+        // ===== /Keyboard shortcuts =====
 
         function toggleTheme() {
             const body = document.body;
@@ -3593,6 +4180,7 @@
             }
             updateThemeOptionActive();
             updateDarkModeToggle();
+            updateMatchCommanderColorsToggle();
         }
 
         function setColorTheme(color) {
@@ -3600,6 +4188,109 @@
             localStorage.setItem('themeColor', color);
             updateThemeOptionActive();
         }
+
+        // ===== Match Commander Colors feature =====
+        // Maps a sorted WUBRG color-identity key to the corresponding theme name.
+        // Order is canonical WUBRG so we can stringify the sorted array as the key.
+        const COLOR_IDENTITY_THEMES = {
+            // Colorless → fall back to default (purple)
+            '': 'purple',
+            // Mono
+            'W': 'white',
+            'U': 'blue',
+            'B': 'black',
+            'R': 'red',
+            'G': 'green',
+            // Guilds (2-color)
+            'W,U': 'azorius',
+            'U,B': 'dimir',
+            'B,R': 'rakdos',
+            'R,G': 'gruul',
+            'W,G': 'selesnya',
+            'W,B': 'orzhov',
+            'U,R': 'izzet',
+            'B,G': 'golgari',
+            'W,R': 'boros',
+            'U,G': 'simic',
+            // Shards (3-color, allied)
+            'W,U,B': 'esper',
+            'U,B,R': 'grixis',
+            'B,R,G': 'jund',
+            'W,R,G': 'naya',
+            'W,U,G': 'bant',
+            // Wedges (3-color, enemy)
+            'W,B,R': 'mardu',
+            'U,R,G': 'temur',
+            'W,B,G': 'abzan',
+            'W,U,R': 'jeskai',
+            'U,B,G': 'sultai',
+            // Nephilim (4-color)
+            'U,B,R,G': 'glint-eye',
+            'W,B,R,G': 'dune-brood',
+            'W,U,R,G': 'ink-treader',
+            'W,U,B,G': 'witch-maw',
+            'W,U,B,R': 'yore-tiller',
+            // 5-color
+            'W,U,B,R,G': 'wubrg'
+        };
+
+        const WUBRG_ORDER = { W: 0, U: 1, B: 2, R: 3, G: 4 };
+
+        // Returns the theme name for a deck based on the union of its commanders' color identities.
+        // Falls back to purple if no commander or no recognized identity.
+        function getThemeForDeck(deck) {
+            if (!deck || !Array.isArray(deck.commanders) || deck.commanders.length === 0) {
+                return 'purple';
+            }
+            const identity = new Set();
+            deck.commanders.forEach(cmd => {
+                if (Array.isArray(cmd.color_identity)) {
+                    cmd.color_identity.forEach(c => {
+                        if (c in WUBRG_ORDER) identity.add(c);
+                    });
+                }
+            });
+            const sorted = Array.from(identity).sort((a, b) => WUBRG_ORDER[a] - WUBRG_ORDER[b]);
+            const key = sorted.join(',');
+            return COLOR_IDENTITY_THEMES[key] || 'purple';
+        }
+
+        function isMatchCommanderColorsEnabled() {
+            return localStorage.getItem('commander2tts_themeMatchCI') === 'true';
+        }
+
+        // Applies the active deck's commander color identity as the current theme.
+        // Does NOT touch localStorage.themeColor — that preserves the user's manual choice
+        // so toggling the feature off restores their original theme.
+        function applyCommanderColorTheme() {
+            if (!isMatchCommanderColorsEnabled()) return;
+            const deck = (typeof getCurrentDeck === 'function') ? getCurrentDeck() : null;
+            const color = getThemeForDeck(deck);
+            document.body.setAttribute('data-color', color);
+            updateThemeOptionActive();
+        }
+
+        function updateMatchCommanderColorsToggle() {
+            const on = isMatchCommanderColorsEnabled();
+            const btn = document.getElementById('matchCommanderColorsToggle');
+            if (btn) btn.classList.toggle('active', on);
+            document.body.classList.toggle('themes-locked', on);
+        }
+
+        function toggleMatchCommanderColors() {
+            const turningOn = !isMatchCommanderColorsEnabled();
+            localStorage.setItem('commander2tts_themeMatchCI', turningOn ? 'true' : 'false');
+            updateMatchCommanderColorsToggle();
+            if (turningOn) {
+                applyCommanderColorTheme();
+            } else {
+                // Restore the user's manually chosen theme (purple if none saved)
+                const savedColor = localStorage.getItem('themeColor') || 'purple';
+                document.body.setAttribute('data-color', savedColor);
+                updateThemeOptionActive();
+            }
+        }
+        // ===== /Match Commander Colors feature =====
 
         function updateThemeOptionActive() {
             const currentColor = document.body.getAttribute('data-color') || 'purple';
@@ -3611,6 +4302,7 @@
         function openSettings() {
             updateDarkModeToggle();
             updateThemeOptionActive();
+            updateMatchCommanderColorsToggle();
             document.getElementById('settingsOverlay').classList.add('active');
         }
 
@@ -3636,21 +4328,194 @@
             showNotification('Settings exported successfully', 'success');
         }
 
+        // Returns true if localStorage has no user-created decks, favorites, or custom art.
+        // A single auto-created empty default deck still counts as empty.
+        function isLocalStorageEmpty() {
+            try {
+                const savedDecks = JSON.parse(localStorage.getItem('commander2tts_decks') || '[]');
+                const hasDeckContent = Array.isArray(savedDecks) && savedDecks.some(d => {
+                    if (!d) return false;
+                    const hasCards = Array.isArray(d.cards) && d.cards.length > 0;
+                    const hasCommanders = Array.isArray(d.commanders) && d.commanders.length > 0;
+                    const hasTokens = Array.isArray(d.tokens) && d.tokens.length > 0;
+                    return hasCards || hasCommanders || hasTokens;
+                });
+                if (hasDeckContent) return false;
+
+                const favorites = JSON.parse(localStorage.getItem('commander2tts_favorites') || '{}');
+                if (favorites && Object.keys(favorites).length > 0) return false;
+
+                const customArt = JSON.parse(localStorage.getItem('commander2tts_custom_art') || '{}');
+                if (customArt && Object.keys(customArt).length > 0) return false;
+
+                return true;
+            } catch {
+                // If parsing fails, treat as non-empty so the user gets the prompt
+                return false;
+            }
+        }
+
+        // Three-option dialog: Merge / Overwrite / Cancel
+        function showImportChoiceDialog(onMerge, onOverwrite) {
+            const existing = document.getElementById('importChoiceModal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.id = 'importChoiceModal';
+            modal.style.zIndex = '3000';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 440px; padding: 1.5rem;">
+                    <button class="modal-close" id="closeImportChoice">✕</button>
+                    <h2 class="modal-title" style="font-size: 1.2rem; margin-bottom: 0.75rem;">Import Backup</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;">You already have decks, favorites, or custom art saved.<br><br><strong>Merge</strong> adds the backup's decks alongside yours and combines favorites and custom art.<br><br><strong>Overwrite</strong> replaces all existing data with the backup.</p>
+                    <div class="card-back-actions" style="gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="card-back-btn" id="cancelImportChoice" style="background: var(--bg-secondary); color: var(--text-primary); border: 2px solid var(--border);">Cancel</button>
+                        <button class="card-back-btn" id="mergeImportChoice" style="background: #27ae60; color: white;">Merge</button>
+                        <button class="card-back-btn" id="overwriteImportChoice" style="background: #e74c3c; color: white;">Overwrite</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const close = () => { modal.remove(); };
+            modal.querySelector('#closeImportChoice').addEventListener('click', close);
+            modal.querySelector('#cancelImportChoice').addEventListener('click', close);
+            modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+            modal.querySelector('#mergeImportChoice').addEventListener('click', () => {
+                close();
+                onMerge();
+            });
+            modal.querySelector('#overwriteImportChoice').addEventListener('click', () => {
+                close();
+                onOverwrite();
+            });
+        }
+
+        // Replaces every commander2tts_* key (plus theme keys) with the imported data
+        function overwriteImport(data) {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('commander2tts') || key === 'theme' || key === 'themeColor') {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            Object.entries(data).forEach(([key, value]) => {
+                localStorage.setItem(key, value);
+            });
+        }
+
+        // Combines decks, favorites, and custom art; keeps local theme/other preferences
+        function mergeImport(data) {
+            // Decks: append imported, dropping a lone empty default deck from local if present
+            try {
+                const localDecks = JSON.parse(localStorage.getItem('commander2tts_decks') || '[]');
+                const importedDecks = JSON.parse(data['commander2tts_decks'] || '[]');
+                if (Array.isArray(importedDecks) && importedDecks.length > 0) {
+                    const filteredLocal = (Array.isArray(localDecks) ? localDecks : []).filter(d => {
+                        if (!d) return false;
+                        const hasCards = Array.isArray(d.cards) && d.cards.length > 0;
+                        const hasCommanders = Array.isArray(d.commanders) && d.commanders.length > 0;
+                        const hasTokens = Array.isArray(d.tokens) && d.tokens.length > 0;
+                        return hasCards || hasCommanders || hasTokens;
+                    });
+                    const merged = [...filteredLocal, ...importedDecks];
+                    localStorage.setItem('commander2tts_decks', JSON.stringify(merged));
+                }
+            } catch {}
+
+            // Favorites: deep-merge per card name, dedupe URLs
+            try {
+                const localFavs = JSON.parse(localStorage.getItem('commander2tts_favorites') || '{}');
+                const importedFavs = JSON.parse(data['commander2tts_favorites'] || '{}');
+                const merged = { ...localFavs };
+                Object.entries(importedFavs).forEach(([cardName, urls]) => {
+                    if (!Array.isArray(urls)) return;
+                    const existing = Array.isArray(merged[cardName]) ? merged[cardName] : [];
+                    merged[cardName] = Array.from(new Set([...existing, ...urls]));
+                });
+                localStorage.setItem('commander2tts_favorites', JSON.stringify(merged));
+            } catch {}
+
+            // Custom art: same deep-merge approach
+            try {
+                const localArt = JSON.parse(localStorage.getItem('commander2tts_custom_art') || '{}');
+                const importedArt = JSON.parse(data['commander2tts_custom_art'] || '{}');
+                const merged = { ...localArt };
+                Object.entries(importedArt).forEach(([cardName, urls]) => {
+                    if (!Array.isArray(urls)) return;
+                    const existing = Array.isArray(merged[cardName]) ? merged[cardName] : [];
+                    merged[cardName] = Array.from(new Set([...existing, ...urls]));
+                });
+                localStorage.setItem('commander2tts_custom_art', JSON.stringify(merged));
+            } catch {}
+
+            // Any other commander2tts_* keys in the backup that don't exist locally — copy them in.
+            // Theme/themeColor and existing keys are left alone so the user's current preferences win.
+            Object.entries(data).forEach(([key, value]) => {
+                if (key === 'commander2tts_decks' ||
+                    key === 'commander2tts_favorites' ||
+                    key === 'commander2tts_custom_art') return;
+                if (key === 'theme' || key === 'themeColor') return;
+                if (localStorage.getItem(key) === null) {
+                    localStorage.setItem(key, value);
+                }
+            });
+        }
+
         function importLocalStorageData(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (event) => {
+                let data;
                 try {
-                    const data = JSON.parse(event.target.result);
-                    Object.entries(data).forEach(([key, value]) => {
-                        localStorage.setItem(key, value);
-                    });
-                    showNotification('Settings imported. Reloading...', 'success');
-                    setTimeout(() => location.reload(), 1000);
+                    data = JSON.parse(event.target.result);
                 } catch (err) {
                     showNotification('Invalid settings file', 'error');
+                    return;
                 }
+                if (!data || typeof data !== 'object') {
+                    showNotification('Invalid settings file', 'error');
+                    return;
+                }
+
+                if (isLocalStorageEmpty()) {
+                    // Nothing to conflict with — just import
+                    try {
+                        Object.entries(data).forEach(([key, value]) => {
+                            localStorage.setItem(key, value);
+                        });
+                        showNotification('Settings imported. Reloading...', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } catch {
+                        showNotification('Invalid settings file', 'error');
+                    }
+                    return;
+                }
+
+                showImportChoiceDialog(
+                    () => {
+                        try {
+                            mergeImport(data);
+                            showNotification('Backup merged. Reloading...', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } catch {
+                            showNotification('Failed to merge backup', 'error');
+                        }
+                    },
+                    () => {
+                        try {
+                            overwriteImport(data);
+                            showNotification('Backup imported. Reloading...', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } catch {
+                            showNotification('Failed to import backup', 'error');
+                        }
+                    }
+                );
             };
             reader.readAsText(file);
             e.target.value = '';
@@ -3735,6 +4600,7 @@
                 scryfall_uri: card.scryfall_uri,
                 cmc: card.cmc || 0,
                 colors: card.colors || [],
+                color_identity: card.color_identity || [],
                 keywords: card.keywords || [],
                 legalities: card.legalities || {}
             };
@@ -3750,6 +4616,14 @@
                 showNotification(`${card.name} set as Partner Commander`, 'success');
             } else {
                 deck.cards.push(cardData);
+            }
+
+            // Auto-detect tokens from all_parts (fire-and-forget, don't block UI)
+            if (card.all_parts && card.all_parts.some(p => p.component === 'token')) {
+                autoDetectTokens(deck, [card]).then(() => {
+                    saveDecks();
+                    renderDeck();
+                }).catch(err => console.warn('Token auto-detect failed:', err));
             }
 
             saveDecks();
@@ -3912,12 +4786,11 @@
                 // Calculate total items to process
                 const commanderCount = data.commanders ? Object.keys(data.commanders).length : 0;
                 const mainboardCount = data.mainboard ? Object.keys(data.mainboard).length : 0;
-                const tokenCount = data.tokens ? Object.keys(data.tokens).length : 0;
-                const totalItems = commanderCount + mainboardCount + tokenCount;
+                const totalItems = commanderCount + mainboardCount;
                 let processedItems = 0;
 
-                // Batch-fetch commander + mainboard names upfront (tokens need special layout:token
-                // searches so they are handled individually below).
+                // Batch-fetch commander + mainboard names upfront.
+                // Tokens are auto-detected from all_parts data after import.
                 const nonTokenNames = [];
                 if (data.commanders) {
                     Object.keys(data.commanders).forEach(n => { if (n && typeof n === 'string') nonTokenNames.push(n); });
@@ -3946,6 +4819,7 @@
                                 scryfall_uri: scryfallCard.scryfall_uri,
                                 cmc: scryfallCard.cmc || 0,
                                 colors: scryfallCard.colors || [],
+                                color_identity: scryfallCard.color_identity || [],
                                 keywords: scryfallCard.keywords || [],
                                 legalities: scryfallCard.legalities || {}
                             });
@@ -3975,6 +4849,7 @@
                                     scryfall_uri: scryfallCard.scryfall_uri,
                                     cmc: scryfallCard.cmc || 0,
                                     colors: scryfallCard.colors || [],
+                                    color_identity: scryfallCard.color_identity || [],
                                     keywords: scryfallCard.keywords || [],
                                     legalities: scryfallCard.legalities || {}
                                 });
@@ -3985,111 +4860,11 @@
                     }
                 }
 
-                // Process tokens
-                if (data.tokens) {
-                    console.log('Moxfield tokens found:', Object.keys(data.tokens).length);
-                    console.log('All token names:', Object.entries(data.tokens).map(([id, data]) => data?.card?.name || data?.name || id));
-                    
-                    // Collect token entries for batch fetching
-                    const tokenEntries = [];
-                    for (const [cardId, cardData] of Object.entries(data.tokens)) {
-                        const cardName = cardData?.card?.name || cardData?.name || cardId;
-                        const moxfieldColors = cardData?.card?.colors || cardData?.colors || [];
-                        if (cardName && typeof cardName === 'string' && cardName.trim() !== '') {
-                            tokenEntries.push({ name: cardName, colors: moxfieldColors, cardId, cardData });
-                        }
-                    }
-
-                    // Batch-fetch all tokens in ~1-2 requests instead of 2×N individual ones
-                    updateProgress(processedItems, totalItems, '- Pre-fetching token data…');
-                    const tokenCache = await fetchTokensByNameBatch(tokenEntries);
-
-                    for (const { name: cardName, colors: moxfieldColors, cardId, cardData } of tokenEntries) {
-                        console.log('Resolving token:', cardName, 'Colors from Moxfield:', moxfieldColors);
-                        const scryfallCard = await resolveTokenFromCache(cardName, moxfieldColors, tokenCache);
-                        if (scryfallCard) {
-                            console.log('Scryfall returned:', scryfallCard.name, '-', scryfallCard.type_line);
-                            
-                            // Only add if it's actually a token or emblem
-                            const typeIsTokenOrEmblem = scryfallCard.type_line && (
-                                scryfallCard.type_line.includes('Token') ||
-                                scryfallCard.type_line.includes('Emblem') ||
-                                scryfallCard.type_line === 'Card' ||
-                                scryfallCard.type_line === 'Creature'
-                            );
-                            
-                            const hasCMC0 = scryfallCard.cmc === 0;
-                            const hasManaCost = scryfallCard.mana_cost && scryfallCard.mana_cost !== '';
-                            const isTokenOrEmblem = typeIsTokenOrEmblem && hasCMC0 && !hasManaCost;
-                            
-                            if (isTokenOrEmblem) {
-                                // For double-faced cards, use the correct face based on colors or name
-                                let imageUrl = scryfallCard.image_uris?.normal;
-                                let actualColors = scryfallCard.colors || [];
-                                
-                                // If no direct image and it's a double-faced card
-                                if (!imageUrl && scryfallCard.card_faces) {
-                                    let matchingFace = null;
-                                    
-                                    if (moxfieldColors && moxfieldColors.length > 0) {
-                                        const sortedMoxColors = [...moxfieldColors].sort().join('');
-                                        matchingFace = scryfallCard.card_faces.find(face => {
-                                            const faceColors = (face.colors || []).sort().join('');
-                                            return faceColors === sortedMoxColors;
-                                        });
-                                    }
-                                    
-                                    if (!matchingFace) {
-                                        matchingFace = scryfallCard.card_faces.find(face => 
-                                            face.name.toLowerCase() === cardName.toLowerCase()
-                                        );
-                                    }
-                                    
-                                    if (matchingFace) {
-                                        imageUrl = matchingFace.image_uris?.normal;
-                                        actualColors = matchingFace.colors || [];
-                                    } else {
-                                        imageUrl = scryfallCard.card_faces[0]?.image_uris?.normal;
-                                        actualColors = scryfallCard.card_faces[0]?.colors || [];
-                                    }
-                                }
-                                
-                                if (!imageUrl) {
-                                    console.log('⚠ Warning: No image URL found for token:', scryfallCard.name);
-                                }
-                                
-                                // Only add unique tokens/emblems
-                                const exists = deck.tokens.find(t => 
-                                    t.name === scryfallCard.name && 
-                                    JSON.stringify(t.colors.sort()) === JSON.stringify(actualColors.sort())
-                                );
-                                if (!exists) {
-                                    console.log('✓ Adding other card:', scryfallCard.name, 'Colors:', actualColors, 'Image:', imageUrl ? 'found' : 'MISSING');
-                                    deck.tokens.push({
-                                        id: scryfallCard.id,
-                                        name: scryfallCard.name,
-                                        type_line: scryfallCard.type_line,
-                                        image_url: imageUrl,
-                                        scryfall_uri: scryfallCard.scryfall_uri,
-                                        cmc: scryfallCard.cmc || 0,
-                                        colors: actualColors
-                                    });
-                                } else {
-                                    console.log('⊗ Skipping duplicate:', scryfallCard.name);
-                                }
-                            } else {
-                                console.log('✗ Skipping non-token/emblem card:', scryfallCard.name, '-', scryfallCard.type_line);
-                            }
-                        } else {
-                            console.log('✗ Failed to fetch from Scryfall:', cardName);
-                        }
-                        processedItems++;
-                        updateProgress(processedItems, totalItems, `- Loading other cards (${deck.tokens.length})`);
-                    }
-                    console.log('Total tokens added:', deck.tokens.length);
-                } else {
-                    console.log('No tokens in Moxfield data');
-                }
+                // Auto-detect tokens from all_parts data on fetched cards
+                updateProgress(processedItems, totalItems, '- Detecting tokens…');
+                const allFetchedCards = [...cardCache.values()];
+                await autoDetectTokens(deck, allFetchedCards);
+                console.log('Auto-detected tokens:', deck.tokens.length);
 
                 updateFilename();
                 saveDecks();
@@ -4169,112 +4944,112 @@
             return cardMap;
         }
 
-        // Batch-fetches tokens using Scryfall's /cards/search endpoint with OR queries.
-        // tokenEntries: Array of { name: string, colors: string[] }
-        // Returns a Map of "lowercased_name|sortedColors" -> card object.
-        // Tokens not found via batch are retried individually as a fallback.
-        async function fetchTokensByNameBatch(tokenEntries) {
-            const tokenMap = new Map();
-            if (!tokenEntries || tokenEntries.length === 0) return tokenMap;
+        // ═══ Auto-Token Detection via Scryfall all_parts ═══
+        // Scans an array of full Scryfall card objects for their `all_parts` field,
+        // collects unique token/emblem IDs, batch-fetches them, and adds to deck.tokens.
 
-            // De-duplicate by name (we'll handle color matching from results)
-            const uniqueNames = [...new Set(
-                tokenEntries
-                    .map(e => e.name)
-                    .filter(n => n && typeof n === 'string' && n.trim())
-                    .map(n => n.trim())
-            )];
+        async function autoDetectTokens(deck, scryfallCards) {
+            // Collect unique token IDs from all_parts across every card
+            const tokenIds = new Map(); // id -> { id, component, name, type_line, uri }
 
-            if (uniqueNames.length === 0) return tokenMap;
-
-            console.log(`Batch token fetch: ${uniqueNames.length} unique token names`);
-
-            // Scryfall search queries have a length limit. We'll batch names into groups
-            // where the query stays reasonable (roughly 10 names per search to keep URL safe).
-            const NAMES_PER_SEARCH = 10;
-
-            for (let i = 0; i < uniqueNames.length; i += NAMES_PER_SEARCH) {
-                const batch = uniqueNames.slice(i, i + NAMES_PER_SEARCH);
-                // Build OR query: (!"Name1" OR !"Name2") layout:token
-                const orClause = batch.map(n => `!"${n}"`).join(' OR ');
-                const query = `(${orClause}) layout:token`;
-
-                await new Promise(resolve => setTimeout(resolve, 100));
-
-                try {
-                    let page = 1;
-                    let hasMore = true;
-
-                    while (hasMore) {
-                        const url = `https://api.scryfall.com/cards/search?q=${encodeURIComponent(query)}&page=${page}&unique=prints`;
-                        const response = await scryfallFetchWithRetry(url);
-
-                        if (!response.ok) {
-                            console.warn(`Token batch search failed (status ${response.status}) for batch starting at index ${i}`);
-                            break;
-                        }
-
-                        const data = await response.json();
-                        if (data.data) {
-                            for (const card of data.data) {
-                                const cardColors = (card.colors || []).sort().join('');
-                                const key = `${card.name.toLowerCase()}|${cardColors}`;
-                                // Keep first match per name+color combo
-                                if (!tokenMap.has(key)) {
-                                    tokenMap.set(key, card);
-                                }
-                                // Also store a name-only key as fallback (first result for that name)
-                                const nameKey = `${card.name.toLowerCase()}|*`;
-                                if (!tokenMap.has(nameKey)) {
-                                    tokenMap.set(nameKey, card);
-                                }
-                            }
-                        }
-
-                        hasMore = data.has_more === true;
-                        if (hasMore) {
-                            page++;
-                            await new Promise(resolve => setTimeout(resolve, 100));
-                        }
+            for (const card of scryfallCards) {
+                if (!card || !card.all_parts) continue;
+                for (const part of card.all_parts) {
+                    // "token" = tokens created by the card
+                    // We skip "meld_result", "meld_part", and "combo_piece"
+                    if (part.component === 'token' && part.id && !tokenIds.has(part.id)) {
+                        tokenIds.set(part.id, {
+                            id: part.id,
+                            component: part.component,
+                            name: part.name,
+                            type_line: part.type_line || '',
+                            uri: part.uri
+                        });
                     }
-                } catch (e) {
-                    if (e.isScryfallDown) throw e;
-                    console.warn('Token batch search error:', e);
                 }
             }
 
-            console.log(`Batch token fetch complete: ${tokenMap.size} entries cached`);
-            return tokenMap;
-        }
-
-        // Looks up a token from the batch cache, falling back to individual fetch.
-        // tokenCache: Map from fetchTokensByNameBatch
-        // Returns the card object or null.
-        async function resolveTokenFromCache(name, colors, tokenCache) {
-            if (!name || typeof name !== 'string') return null;
-
-            const sortedColors = (colors || []).sort().join('');
-
-            // Try exact name+color match first
-            const exactKey = `${name.toLowerCase().trim()}|${sortedColors}`;
-            if (tokenCache.has(exactKey)) {
-                console.log(`Token cache hit (exact): ${name} [${sortedColors}]`);
-                return tokenCache.get(exactKey);
+            if (tokenIds.size === 0) {
+                console.log('Auto-detect tokens: no tokens found in all_parts');
+                return;
             }
 
-            // Try name-only fallback
-            const nameKey = `${name.toLowerCase().trim()}|*`;
-            if (tokenCache.has(nameKey)) {
-                console.log(`Token cache hit (name-only): ${name}`);
-                return tokenCache.get(nameKey);
+            console.log(`Auto-detect tokens: found ${tokenIds.size} unique token IDs from all_parts`);
+
+            // Batch-fetch full card objects for these token IDs via /cards/collection
+            const allTokenCards = [];
+            const ids = [...tokenIds.keys()];
+
+            for (let i = 0; i < ids.length; i += 75) {
+                const batch = ids.slice(i, i + 75);
+                await new Promise(resolve => setTimeout(resolve, 100));
+                try {
+                    const response = await scryfallFetchWithRetry(
+                        'https://api.scryfall.com/cards/collection',
+                        {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ identifiers: batch.map(id => ({ id })) })
+                        }
+                    );
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.data) {
+                            allTokenCards.push(...data.data);
+                        }
+                        console.log(`Token batch fetch: got ${data.data?.length ?? 0}/${batch.length}`);
+                    }
+                } catch (e) {
+                    if (e.isScryfallDown) throw e;
+                    console.warn('Token batch fetch failed:', e);
+                }
             }
 
-            // Cache miss – fall back to individual fetch
-            console.log(`Token cache miss, individual fetch: ${name}`);
-            return await fetchCardByName(name, true, colors);
+            // Deduplicate by name+colors and add to deck
+            for (const tokenCard of allTokenCards) {
+                let imageUrl = tokenCard.image_uris?.normal;
+                let colors = tokenCard.colors || [];
+
+                // Handle double-faced tokens (e.g. Incubator // Phyrexian token)
+                if (!imageUrl && tokenCard.card_faces) {
+                    // Prefer the face whose type_line includes "Token"
+                    const tokenFace = tokenCard.card_faces.find(f => 
+                        f.type_line && f.type_line.includes('Token')
+                    ) || tokenCard.card_faces[0];
+                    imageUrl = tokenFace?.image_uris?.normal;
+                    colors = tokenFace?.colors || colors;
+                }
+
+                if (!imageUrl) {
+                    console.log('⚠ No image for token:', tokenCard.name);
+                    continue;
+                }
+
+                // Deduplicate: skip if this exact name+color combo already exists
+                const sortedColors = [...colors].sort().join('');
+                const exists = deck.tokens.some(t =>
+                    t.name === tokenCard.name &&
+                    [...(t.colors || [])].sort().join('') === sortedColors
+                );
+                if (exists) {
+                    console.log('⊗ Skipping duplicate token:', tokenCard.name);
+                    continue;
+                }
+
+                console.log('✓ Auto-adding token:', tokenCard.name, 'Colors:', colors);
+                deck.tokens.push({
+                    id: tokenCard.id,
+                    name: tokenCard.name,
+                    type_line: tokenCard.type_line,
+                    image_url: imageUrl,
+                    scryfall_uri: tokenCard.scryfall_uri,
+                    cmc: tokenCard.cmc || 0,
+                    colors: colors
+                });
+            }
         }
 
-        async function fetchCardByName(name, preferToken = false, preferredColors = null) {
+        async function fetchCardByName(name) {
             // Skip invalid card names
             if (!name || typeof name !== 'string' || name.trim() === '') {
                 console.warn('Invalid card name:', name);
@@ -4284,68 +5059,6 @@
             try {
                 // Throttle to ≤10 req/s; scryfallFetchWithRetry handles 429 backoff on top.
                 await new Promise(resolve => setTimeout(resolve, 100));
-
-                // If preferToken is true, search for token version first
-                if (preferToken) {
-                    try {
-                        // Use Scryfall's layout:token filter for more accurate token search
-                        const searchResponse = await scryfallFetchWithRetry(
-                            `https://api.scryfall.com/cards/search?q=${encodeURIComponent(`!"${name.trim()}" layout:token`)}`
-                        );
-                        if (searchResponse.ok) {
-                            const searchData = await searchResponse.json();
-                            if (searchData.data && searchData.data.length > 0) {
-                                // If we have preferred colors, filter for matching tokens
-                                if (preferredColors && preferredColors.length > 0) {
-                                    const sortedPreferredColors = [...preferredColors].sort().join('');
-                                    const matchingToken = searchData.data.find(card => {
-                                        const cardColors = (card.colors || []).sort().join('');
-                                        return cardColors === sortedPreferredColors;
-                                    });
-                                    if (matchingToken) {
-                                        console.log(`Fetched ${matchingToken.name} with matching colors (${preferredColors}): CMC=${matchingToken.cmc}`);
-                                        return matchingToken;
-                                    }
-                                }
-                                // Return first result if no color match needed or found
-                                const card = searchData.data[0];
-                                console.log(`Fetched ${card.name} (token layout search): CMC=${card.cmc}, Colors=${card.colors}`);
-                                return card;
-                            }
-                        }
-                    } catch (e) {
-                        console.log('Token layout search failed, trying type search...');
-                    }
-
-                    // Fallback: try type:token search
-                    try {
-                        const searchResponse = await scryfallFetchWithRetry(
-                            `https://api.scryfall.com/cards/search?q=${encodeURIComponent(`!"${name.trim()}" t:token`)}`
-                        );
-                        if (searchResponse.ok) {
-                            const searchData = await searchResponse.json();
-                            if (searchData.data && searchData.data.length > 0) {
-                                // If we have preferred colors, filter for matching tokens
-                                if (preferredColors && preferredColors.length > 0) {
-                                    const sortedPreferredColors = [...preferredColors].sort().join('');
-                                    const matchingToken = searchData.data.find(card => {
-                                        const cardColors = (card.colors || []).sort().join('');
-                                        return cardColors === sortedPreferredColors;
-                                    });
-                                    if (matchingToken) {
-                                        console.log(`Fetched ${matchingToken.name} with matching colors (${preferredColors}): CMC=${matchingToken.cmc}`);
-                                        return matchingToken;
-                                    }
-                                }
-                                const card = searchData.data[0];
-                                console.log(`Fetched ${card.name} (token type search): CMC=${card.cmc}, Colors=${card.colors}`);
-                                return card;
-                            }
-                        }
-                    } catch (e) {
-                        console.log('Token type search failed, falling back to exact match');
-                    }
-                }
 
                 // Properly encode the card name for URL
                 const encodedName = encodeURIComponent(name.trim());
@@ -4367,9 +5080,384 @@
             }
         }
 
+        // ═══ Stats Sidebar ═══
+        function toggleStatsSidebar() {
+            const sidebar = document.getElementById('statsSidebar');
+            const btn = document.getElementById('statsBtn');
+            const isOpen = sidebar.classList.contains('open');
+            if (isOpen) {
+                closeStatsSidebar();
+            } else {
+                sidebar.classList.add('open');
+                btn.classList.add('active');
+                updateStats();
+            }
+        }
+
+        function closeStatsSidebar() {
+            document.getElementById('statsSidebar').classList.remove('open');
+            document.getElementById('statsBtn').classList.remove('active');
+        }
+
+        // ═══ Deck Validation ═══
+        const BASIC_LANDS = ['Plains', 'Island', 'Swamp', 'Mountain', 'Forest', 'Wastes',
+            'Snow-Covered Plains', 'Snow-Covered Island', 'Snow-Covered Swamp',
+            'Snow-Covered Mountain', 'Snow-Covered Forest'];
+
+        // Cards that explicitly allow any number in a deck
+        const UNLIMITED_CARDS = ['Relentless Rats', 'Rat Colony', 'Persistent Petitioners',
+            'Dragon\'s Approach', 'Shadowborn Apostle', 'Slime Against Humanity',
+            'Seven Dwarves'];
+
+        function validateDeck(deck) {
+            const issues = [];
+
+            // 1. Missing commander
+            if (!deck.commanders || deck.commanders.length === 0) {
+                issues.push({ type: 'error', icon: 'person_off', message: 'No commander selected' });
+            }
+
+            // 2. Deck size
+            const expectedMain = (deck.commanders && deck.commanders.length === 2) ? 98 : 99;
+            const mainCount = deck.cards ? deck.cards.length : 0;
+            if (mainCount < expectedMain) {
+                issues.push({ type: 'warning', icon: 'remove_circle_outline', message: `Deck has ${mainCount} cards (need ${expectedMain})` });
+            } else if (mainCount > expectedMain) {
+                issues.push({ type: 'error', icon: 'add_circle_outline', message: `Deck has ${mainCount} cards (max ${expectedMain})` });
+            }
+
+            // 3. Color identity violations
+            if (deck.commanders && deck.commanders.length > 0) {
+                // Build combined commander color identity
+                const commanderIdentity = new Set();
+                let hasIdentityData = false;
+                deck.commanders.forEach(cmd => {
+                    if (cmd.color_identity && cmd.color_identity.length >= 0) {
+                        hasIdentityData = true;
+                        cmd.color_identity.forEach(c => commanderIdentity.add(c));
+                    }
+                });
+
+                if (hasIdentityData && deck.cards) {
+                    const violationGroups = new Map(); // name -> { count, violations }
+                    deck.cards.forEach(card => {
+                        if (!card.color_identity) return;
+                        const violations = card.color_identity.filter(c => !commanderIdentity.has(c));
+                        if (violations.length > 0) {
+                            if (violationGroups.has(card.name)) {
+                                violationGroups.get(card.name).count++;
+                            } else {
+                                violationGroups.set(card.name, { count: 1, violations });
+                            }
+                        }
+                    });
+                    const colorNames = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green' };
+                    violationGroups.forEach(({ count, violations }, name) => {
+                        const violationNames = violations.map(v => colorNames[v] || v).join(', ');
+                        issues.push({
+                            type: 'error',
+                            icon: 'palette',
+                            message: count > 1 ? `${name} (×${count})` : name,
+                            detail: `Contains ${violationNames} outside color identity`
+                        });
+                    });
+                }
+            }
+
+            // 4. Banned cards
+            // Note: Scryfall's "not_legal" status means the printing's set isn't in the format's
+            // pool, NOT that the card itself is banned. This is common for cards from supplemental
+            // sets, Commander precons reprinted from old sets, etc. Only "banned" means the card
+            // is actually prohibited by the rules committee.
+            if (deck.cards) {
+                const bannedGroups = new Map();
+                deck.cards.forEach(card => {
+                    if (card.legalities && card.legalities.commander === 'banned') {
+                        bannedGroups.set(card.name, (bannedGroups.get(card.name) || 0) + 1);
+                    }
+                });
+                bannedGroups.forEach((count, name) => {
+                    issues.push({
+                        type: 'error',
+                        icon: 'block',
+                        message: count > 1 ? `${name} (×${count})` : name,
+                        detail: 'Banned in Commander'
+                    });
+                });
+            }
+            // Also check commanders
+            if (deck.commanders) {
+                deck.commanders.forEach(cmd => {
+                    if (cmd.legalities && cmd.legalities.commander === 'banned') {
+                        issues.push({
+                            type: 'error',
+                            icon: 'block',
+                            message: `${cmd.name}`,
+                            detail: 'Banned in Commander'
+                        });
+                    }
+                });
+            }
+
+            // 5. Duplicate non-basic cards
+            if (deck.cards) {
+                const nameCounts = {};
+                deck.cards.forEach(card => {
+                    nameCounts[card.name] = (nameCounts[card.name] || 0) + 1;
+                });
+                Object.entries(nameCounts).forEach(([name, count]) => {
+                    if (count > 1 && !BASIC_LANDS.includes(name) && !UNLIMITED_CARDS.includes(name)) {
+                        issues.push({
+                            type: 'error',
+                            icon: 'content_copy',
+                            message: `${name} (×${count})`,
+                            detail: 'Duplicate card (singleton format)'
+                        });
+                    }
+                });
+            }
+
+            return issues;
+        }
+
+        function updateStats() {
+            const sidebar = document.getElementById('statsSidebar');
+            if (!sidebar.classList.contains('open')) return;
+
+            const deck = getCurrentDeck();
+            const allCards = [...(deck.commanders || []), ...(deck.cards || [])];
+            const mainCards = deck.cards || [];
+            const body = document.getElementById('statsBody');
+
+            if (allCards.length === 0) {
+                body.innerHTML = '<div class="stats-empty">Import or build a deck to see statistics</div>';
+                return;
+            }
+
+            // ── Compute stats ──
+
+            const totalCards = allCards.length;
+
+            // Land count
+            const lands = mainCards.filter(c => c.type_line && c.type_line.includes('Land'));
+            const landCount = lands.length;
+            let landIndicator = 'ok';
+            let landLabel = 'OK';
+            if (landCount < 33) { landIndicator = 'low'; landLabel = 'Low'; }
+            else if (landCount > 40) { landIndicator = 'high'; landLabel = 'High'; }
+
+            // Mana curve (exclude lands)
+            const nonLands = mainCards.filter(c => !c.type_line || !c.type_line.includes('Land'));
+            const curveBuckets = [0, 0, 0, 0, 0, 0, 0, 0]; // 0,1,2,3,4,5,6,7+
+            let totalCMC = 0;
+            nonLands.forEach(c => {
+                const cmc = Math.floor(c.cmc || 0);
+                const bucket = Math.min(cmc, 7);
+                curveBuckets[bucket]++;
+                totalCMC += (c.cmc || 0);
+            });
+            const avgCMC = nonLands.length > 0 ? (totalCMC / nonLands.length).toFixed(2) : '0.00';
+            const maxBucket = Math.max(...curveBuckets, 1);
+
+            // Card types — only show types that have cards
+            const typeCategories = [
+                { label: 'Creatures', key: 'Creature' },
+                { label: 'Instants', key: 'Instant' },
+                { label: 'Sorceries', key: 'Sorcery' },
+                { label: 'Enchantments', key: 'Enchantment' },
+                { label: 'Artifacts', key: 'Artifact' },
+                { label: 'Planeswalkers', key: 'Planeswalker' },
+                { label: 'Lands', key: 'Land' },
+            ];
+            const typeCounts = typeCategories
+                .map(tc => ({ ...tc, count: mainCards.filter(c => c.type_line && c.type_line.includes(tc.key)).length }))
+                .filter(tc => tc.count > 0);
+            const maxTypeCount = Math.max(...typeCounts.map(t => t.count), 1);
+
+            // Color distribution — only show colors that are used
+            const colorDefs = [
+                { code: 'W', label: 'White', cssClass: 'w' },
+                { code: 'U', label: 'Blue', cssClass: 'u' },
+                { code: 'B', label: 'Black', cssClass: 'b' },
+                { code: 'R', label: 'Red', cssClass: 'r' },
+                { code: 'G', label: 'Green', cssClass: 'g' },
+            ];
+            const colorCounts = {};
+            colorDefs.forEach(cd => { colorCounts[cd.code] = 0; });
+            let colorlessCount = 0;
+            let multiCount = 0;
+
+            mainCards.forEach(c => {
+                const colors = c.colors || [];
+                if (colors.length === 0) {
+                    colorlessCount++;
+                } else {
+                    if (colors.length > 1) multiCount++;
+                    colors.forEach(col => {
+                        if (colorCounts[col] !== undefined) colorCounts[col]++;
+                    });
+                }
+            });
+
+            // ── Build HTML ──
+            const curveLabels = ['0', '1', '2', '3', '4', '5', '6', '7+'];
+
+            let html = '';
+
+            // Validation
+            const issues = validateDeck(deck);
+            if (issues.length > 0) {
+                const errorCount = issues.filter(i => i.type === 'error').length;
+                const warnCount = issues.filter(i => i.type === 'warning').length;
+                let summaryParts = [];
+                if (errorCount > 0) summaryParts.push(`${errorCount} error${errorCount > 1 ? 's' : ''}`);
+                if (warnCount > 0) summaryParts.push(`${warnCount} warning${warnCount > 1 ? 's' : ''}`);
+
+                html += `<div>
+                    <div class="stats-section-title" style="color: ${errorCount > 0 ? '#e74c3c' : '#f39c12'};">
+                        <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 2px;">${errorCount > 0 ? 'error' : 'warning'}</span>
+                        ${summaryParts.join(', ')}
+                    </div>
+                    <div class="stats-issues-list">`;
+                issues.forEach(issue => {
+                    html += `
+                        <div class="stats-issue-item ${issue.type}">
+                            <span class="material-icons stats-issue-icon">${issue.icon}</span>
+                            <div class="stats-issue-text">
+                                <span class="stats-issue-message">${issue.message}</span>
+                                ${issue.detail ? `<span class="stats-issue-detail">${issue.detail}</span>` : ''}
+                            </div>
+                        </div>`;
+                });
+                html += `</div></div>`;
+            } else if (allCards.length > 0) {
+                html += `<div>
+                    <div class="stats-section-title" style="color: #27ae60;">
+                        <span class="material-icons" style="font-size: 14px; vertical-align: middle; margin-right: 2px;">check_circle</span>
+                        Deck is valid
+                    </div>
+                </div>`;
+            }
+
+            // Overview
+            html += `
+                <div>
+                    <div class="stats-section-title">Overview</div>
+                    <div class="stats-total-row" style="margin-bottom: 5px;">
+                        <span class="stats-total-label">Total Cards</span>
+                        <span class="stats-total-count">${totalCards}</span>
+                    </div>
+                    <div class="stats-land-row">
+                        <span class="stats-land-label">Lands</span>
+                        <div style="display:flex; align-items:center;">
+                            <span class="stats-land-count">${landCount}</span>
+                            <span class="stats-land-indicator ${landIndicator}">${landLabel}</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Mana Curve — vertical
+            html += `
+                <div>
+                    <div class="stats-section-title">Mana Curve</div>
+                    <div class="stats-curve-avg">Avg CMC: ${avgCMC}</div>
+                    <div class="stats-curve-chart">
+            `;
+            curveLabels.forEach((label, i) => {
+                const count = curveBuckets[i];
+                const pct = maxBucket > 0 ? (count / maxBucket) * 100 : 0;
+                html += `
+                    <div class="stats-curve-col">
+                        <div class="stats-curve-bar-wrap">
+                            <div class="stats-curve-vbar" style="height: ${pct}%">
+                                ${count > 0 ? `<span class="stats-curve-vbar-count">${count}</span>` : ''}
+                            </div>
+                        </div>
+                        <span class="stats-curve-xlabel">${label}</span>
+                    </div>
+                `;
+            });
+            html += `</div></div>`;
+
+            // Card Types — only non-zero
+            if (typeCounts.length > 0) {
+                html += `
+                    <div>
+                        <div class="stats-section-title">Card Types</div>
+                        <div class="stats-type-list">
+                `;
+                typeCounts.forEach(tc => {
+                    const pct = maxTypeCount > 0 ? (tc.count / maxTypeCount) * 100 : 0;
+                    html += `
+                        <div class="stats-type-row">
+                            <span class="stats-type-name">${tc.label}</span>
+                            <div class="stats-type-bar-bg">
+                                <div class="stats-type-bar" style="width: ${pct}%"></div>
+                            </div>
+                            <span class="stats-type-count">${tc.count}</span>
+                        </div>
+                    `;
+                });
+                html += `</div></div>`;
+            }
+
+            // Color Distribution — only non-zero
+            const activeColors = colorDefs.filter(cd => colorCounts[cd.code] > 0);
+            const showColorless = colorlessCount > 0;
+            const showMulti = multiCount > 0;
+
+            if (activeColors.length > 0 || showColorless || showMulti) {
+                html += `
+                    <div>
+                        <div class="stats-section-title">Color Distribution</div>
+                        <div class="stats-color-grid">
+                `;
+                activeColors.forEach(cd => {
+                    html += `
+                        <div class="stats-color-item">
+                            <div class="stats-color-pip ${cd.cssClass}"></div>
+                            <div class="stats-color-info">
+                                <span class="stats-color-label">${cd.label}</span>
+                                <span class="stats-color-count">${colorCounts[cd.code]}</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                if (showColorless) {
+                    html += `
+                        <div class="stats-color-item">
+                            <div class="stats-color-pip c"></div>
+                            <div class="stats-color-info">
+                                <span class="stats-color-label">Colorless</span>
+                                <span class="stats-color-count">${colorlessCount}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                if (showMulti) {
+                    html += `
+                        <div class="stats-color-item">
+                            <div class="stats-color-pip m"></div>
+                            <div class="stats-color-info">
+                                <span class="stats-color-label">Multi</span>
+                                <span class="stats-color-count">${multiCount}</span>
+                            </div>
+                        </div>
+                    `;
+                }
+                html += `</div></div>`;
+            }
+
+            body.innerHTML = html;
+        }
+
         // Render deck
         function renderDeck() {
             const deck = getCurrentDeck();
+
+            // Apply commander color identity theme if enabled
+            applyCommanderColorTheme();
             
             // Render commander(s)
             const commanderList = document.getElementById('commanderList');
@@ -4434,6 +5522,9 @@
             } else {
                 tokenSection.style.display = 'none';
             }
+
+            // Update stats sidebar if open
+            updateStats();
         }
 
         function updateCardCounts() {
@@ -4464,6 +5555,7 @@
             if (hasSearchQuery) {
                 // Just update badges for existing cards in view
                 updateIndividualCardCounts();
+                updateStats();
             } else {
                 // Re-render the deck list to handle added/removed cards
                 renderDeck();
@@ -5650,11 +6742,6 @@
                 return;
             }
 
-            const expectedMainDeck = deck.commanders.length === 2 ? 98 : 99;
-            if (deck.cards.length !== expectedMainDeck) {
-                showNotification(`Your deck has ${deck.cards.length} cards instead of ${expectedMainDeck}. Exporting anyway...`, 'warning', 'Deck Size Warning', 5000);
-            }
-
             // Save the card back URL from the modal
             const newCardBackUrl = document.getElementById('cardBackUrlInput').value.trim();
             if (newCardBackUrl) {
@@ -5669,6 +6756,39 @@
                 }
             }
 
+            // Run validation
+            const issues = validateDeck(deck);
+            if (issues.length > 0) {
+                const errorCount = issues.filter(i => i.type === 'error').length;
+                const warnCount = issues.filter(i => i.type === 'warning').length;
+
+                let listHtml = '<div style="text-align:left; max-height: 200px; overflow-y: auto; margin: 0.5rem 0 0.5rem 0;">';
+                issues.forEach(issue => {
+                    const color = issue.type === 'error' ? '#e74c3c' : '#f39c12';
+                    listHtml += `<div style="display:flex; align-items:flex-start; gap:0.4rem; padding:0.25rem 0; font-size:0.85rem;">`;
+                    listHtml += `<span class="material-icons" style="font-size:16px; color:${color}; flex-shrink:0; margin-top:1px;">${issue.icon}</span>`;
+                    listHtml += `<div><strong>${issue.message}</strong>`;
+                    if (issue.detail) listHtml += `<br><span style="font-size:0.75rem; color:var(--text-secondary);">${issue.detail}</span>`;
+                    listHtml += `</div></div>`;
+                });
+                listHtml += '</div>';
+
+                let summaryParts = [];
+                if (errorCount > 0) summaryParts.push(`${errorCount} error${errorCount > 1 ? 's' : ''}`);
+                if (warnCount > 0) summaryParts.push(`${warnCount} warning${warnCount > 1 ? 's' : ''}`);
+
+                showConfirmDialog(
+                    `${summaryParts.join(' and ')} found`,
+                    `Your deck has the following issues:${listHtml}Do you want to export anyway?`,
+                    'Export Anyway',
+                    () => { doExport(deck); }
+                );
+            } else {
+                doExport(deck);
+            }
+        }
+
+        function doExport(deck) {
             const filename = document.getElementById('filenameInput').value || 'commander-deck.json';
             const ttsJson = generateTTSJson(deck);
             
@@ -5708,6 +6828,7 @@
                         scryfall_uri: card.scryfall_uri,
                         cmc: card.cmc || 0,
                         colors: card.colors || [],
+                        color_identity: card.color_identity || [],
                         keywords: card.keywords || [],
                         legalities: card.legalities || {},
                         commander: false,
@@ -5774,6 +6895,7 @@
                         scryfall_uri: commander.scryfall_uri,
                         cmc: commander.cmc || 0,
                         colors: commander.colors || [],
+                        color_identity: commander.color_identity || [],
                         keywords: commander.keywords || [],
                         legalities: commander.legalities || {},
                         commander: true,
@@ -6070,6 +7192,7 @@
                                 scryfall_uri: meta.scryfall_uri || '',
                                 cmc: meta.cmc || 0,
                                 colors: meta.colors || [],
+                                color_identity: meta.color_identity || [],
                                 keywords: meta.keywords || [],
                                 legalities: meta.legalities || {}
                             };
@@ -6107,6 +7230,7 @@
                             scryfall_uri: meta.scryfall_uri || '',
                             cmc: meta.cmc || 0,
                             colors: meta.colors || [],
+                            color_identity: meta.color_identity || [],
                             keywords: meta.keywords || [],
                             legalities: meta.legalities || {}
                         };
@@ -6147,100 +7271,24 @@
                 }
             });
 
-            // Pre-collect card names from non-token decks and standalone Cards for batch fetching.
-            // Also collect token names for batch token search.
-            const nonTokenNames = [];
-            const tokenDeckEntries = []; // { name, colors: null, obj, containedObj }
+            // Pre-collect all card names for batch fetching
+            const allNames = [];
             for (const obj of objectStates) {
                 if (obj.Name === 'DeckCustom' && obj.ContainedObjects) {
-                    const isTokenDeck = obj.Transform?.posX > 4;
-                    if (!isTokenDeck) {
-                        obj.ContainedObjects.forEach(c => { if (c.Nickname) nonTokenNames.push(c.Nickname); });
-                    } else {
-                        // Collect token entries for batch search
-                        obj.ContainedObjects.forEach(c => {
-                            if (c.Nickname) {
-                                tokenDeckEntries.push({ name: c.Nickname, colors: [], obj, containedObj: c });
-                            }
-                        });
-                    }
+                    obj.ContainedObjects.forEach(c => { if (c.Nickname) allNames.push(c.Nickname); });
                 } else if (obj.Name === 'Card' && obj.Nickname) {
-                    nonTokenNames.push(obj.Nickname);
+                    allNames.push(obj.Nickname);
                 }
             }
 
-            // Batch fetch non-token cards (up to 75 per request) to stay within rate limits
+            // Batch fetch all cards (up to 75 per request)
             updateProgress(0, totalCards, '- Pre-fetching card data…');
-            const cardCache = await fetchCardsByNameBatch(nonTokenNames);
-
-            // Batch fetch tokens via search (layout:token) to reduce API calls
-            let tokenCache = new Map();
-            if (tokenDeckEntries.length > 0) {
-                updateProgress(0, totalCards, '- Pre-fetching token data…');
-
-                // If tokens have Scryfall URLs, batch-fetch by ID to get colors first
-                const idFetchPromises = [];
-                for (const entry of tokenDeckEntries) {
-                    const cardId = entry.containedObj.CardID;
-                    const deckKey = String(Math.floor(cardId / 100));
-                    const faceURL = entry.obj.CustomDeck?.[deckKey]?.FaceURL;
-                    if (faceURL && faceURL.includes('scryfall.io')) {
-                        const scryfallIdMatch = faceURL.match(/\/([a-f0-9-]{36})\.jpg/);
-                        if (scryfallIdMatch) {
-                            entry._scryfallId = scryfallIdMatch[1];
-                        }
-                    }
-                }
-
-                // Batch-fetch Scryfall IDs via /cards/collection to get colors
-                const idsToFetch = tokenDeckEntries
-                    .filter(e => e._scryfallId)
-                    .map(e => e._scryfallId);
-                const uniqueIds = [...new Set(idsToFetch)];
-                const idColorMap = new Map();
-
-                for (let i = 0; i < uniqueIds.length; i += 75) {
-                    const batch = uniqueIds.slice(i, i + 75);
-                    await new Promise(resolve => setTimeout(resolve, 100));
-                    try {
-                        const response = await scryfallFetchWithRetry(
-                            'https://api.scryfall.com/cards/collection',
-                            {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json' },
-                                body: JSON.stringify({ identifiers: batch.map(id => ({ id })) })
-                            }
-                        );
-                        if (response.ok) {
-                            const data = await response.json();
-                            (data.data || []).forEach(card => {
-                                idColorMap.set(card.id, card.colors || []);
-                            });
-                        }
-                    } catch (e) {
-                        if (e.isScryfallDown) throw e;
-                        console.warn('Token ID batch fetch failed:', e);
-                    }
-                }
-
-                // Assign fetched colors back to entries
-                for (const entry of tokenDeckEntries) {
-                    if (entry._scryfallId && idColorMap.has(entry._scryfallId)) {
-                        entry.colors = idColorMap.get(entry._scryfallId);
-                    }
-                }
-
-                // Now batch-fetch token cards by name
-                tokenCache = await fetchTokensByNameBatch(tokenDeckEntries);
-            }
+            const cardCache = await fetchCardsByNameBatch(allNames);
 
             // Process each object state
             for (const obj of objectStates) {
                 // Handle deck of cards
                 if (obj.Name === 'DeckCustom' && obj.ContainedObjects && obj.CustomDeck) {
-                    // Check if this is a token deck based on position (tokens exported at x: 4.4)
-                    const isTokenDeck = obj.Transform?.posX > 4;
-                    
                     for (const containedObj of obj.ContainedObjects) {
                         const cardName = containedObj.Nickname;
                         const cardId = containedObj.CardID;
@@ -6250,97 +7298,45 @@
                         const faceURL = obj.CustomDeck[deckKey]?.FaceURL;
                         
                         if (cardName && faceURL) {
-                            // For tokens, get colors from pre-fetched data
-                            let preferredColors = null;
-
-                            if (isTokenDeck) {
-                                // Look up colors from the batch-fetched ID map
-                                const scryfallIdMatch = faceURL.match(/\/([a-f0-9-]{36})\.jpg/);
-                                if (scryfallIdMatch) {
-                                    // Colors were already fetched in the batch above
-                                    const entry = tokenDeckEntries.find(e => 
-                                        e._scryfallId === scryfallIdMatch[1] && e.containedObj === containedObj
-                                    );
-                                    if (entry) {
-                                        preferredColors = entry.colors;
-                                        console.log(`Using pre-fetched colors for ${cardName}: ${preferredColors}`);
-                                    }
-                                }
-                            }
-
-                            // Use pre-fetched cache for non-token cards; use token cache for tokens
                             const cacheKey = cardName.toLowerCase().trim();
-                            let scryfallCard;
-                            if (!isTokenDeck && cardCache.has(cacheKey)) {
-                                scryfallCard = cardCache.get(cacheKey);
-                            } else if (isTokenDeck) {
-                                scryfallCard = await resolveTokenFromCache(cardName, preferredColors, tokenCache);
-                            } else {
-                                scryfallCard = await fetchCardByName(cardName, false, null);
-                            }
+                            const scryfallCard = cardCache.has(cacheKey)
+                                ? cardCache.get(cacheKey)
+                                : await fetchCardByName(cardName);
                             
                             if (scryfallCard) {
-                                // Use same token/emblem detection logic as Moxfield import
-                                const typeIsTokenOrEmblem = scryfallCard.type_line && (
-                                    scryfallCard.type_line.includes('Token') ||
-                                    scryfallCard.type_line.includes('Emblem') ||
-                                    scryfallCard.type_line === 'Card' ||
-                                    scryfallCard.type_line === 'Creature'
-                                );
-                                
-                                const hasCMC0 = scryfallCard.cmc === 0;
-                                const hasManaCost = scryfallCard.mana_cost && scryfallCard.mana_cost !== '';
-                                const isTokenOrEmblem = typeIsTokenOrEmblem && hasCMC0 && !hasManaCost;
-                                
-                                // Check if this is close to commander position (first deck, near position 0)
+                                // Check if this is close to commander position
                                 const isLikelyCommander = obj.Transform?.posX < 3 && obj.Transform?.posX > -3 
                                     && obj.ContainedObjects.length === 1;
                                 
+                                // Save custom art if non-Scryfall URL
+                                if (!isScryfallUrl(faceURL)) {
+                                    addCustomArt(scryfallCard.name, faceURL);
+                                }
+
                                 if (isLikelyCommander && deck.commanders.length < 2) {
-                                    // Save custom art if non-Scryfall URL
-                                    if (!isScryfallUrl(faceURL)) {
-                                        addCustomArt(scryfallCard.name, faceURL);
-                                    }
                                     deck.commanders.push({
                                         id: scryfallCard.id,
                                         name: scryfallCard.name,
                                         type_line: scryfallCard.type_line,
-                                        image_url: faceURL, // Use the custom art from JSON
+                                        image_url: faceURL,
                                         scryfall_uri: scryfallCard.scryfall_uri,
                                         cmc: scryfallCard.cmc || 0,
                                         colors: scryfallCard.colors || [],
+                                        color_identity: scryfallCard.color_identity || [],
                                         keywords: scryfallCard.keywords || [],
                                         legalities: scryfallCard.legalities || {}
                                     });
-                                } else if (isTokenOrEmblem) {
-                                    // Save custom art if non-Scryfall URL
-                                    if (!isScryfallUrl(faceURL)) {
-                                        addCustomArt(scryfallCard.name, faceURL);
-                                    }
-                                    // Add to tokens array
-                                    deck.tokens.push({
-                                        id: scryfallCard.id,
-                                        name: scryfallCard.name,
-                                        type_line: scryfallCard.type_line,
-                                        image_url: faceURL, // Use the custom art from JSON
-                                        scryfall_uri: scryfallCard.scryfall_uri,
-                                        cmc: scryfallCard.cmc || 0,
-                                        colors: scryfallCard.colors || []
-                                    });
                                 } else {
-                                    // Save custom art if non-Scryfall URL
-                                    if (!isScryfallUrl(faceURL)) {
-                                        addCustomArt(scryfallCard.name, faceURL);
-                                    }
-                                    // Add to main deck
+                                    // Add to main deck (tokens will be auto-detected from all_parts later)
                                     deck.cards.push({
                                         id: scryfallCard.id,
                                         name: scryfallCard.name,
                                         type_line: scryfallCard.type_line,
-                                        image_url: faceURL, // Use the custom art from JSON
+                                        image_url: faceURL,
                                         scryfall_uri: scryfallCard.scryfall_uri,
                                         cmc: scryfallCard.cmc || 0,
-                                        colors: scryfallCard.colors || []
+                                        colors: scryfallCard.colors || [],
+                                        color_identity: scryfallCard.color_identity || []
                                     });
                                 }
                             }
@@ -6357,10 +7353,12 @@
                     const faceURL = obj.CustomDeck?.[deckKey]?.FaceURL;
                     
                     if (cardName && faceURL) {
-                        const scryfallCard = await fetchCardByName(cardName);
+                        const cacheKey = cardName.toLowerCase().trim();
+                        const scryfallCard = cardCache.has(cacheKey)
+                            ? cardCache.get(cacheKey)
+                            : await fetchCardByName(cardName);
                         
                         if (scryfallCard && deck.commanders.length < 2) {
-                            // Save custom art if non-Scryfall URL
                             if (!isScryfallUrl(faceURL)) {
                                 addCustomArt(scryfallCard.name, faceURL);
                             }
@@ -6368,10 +7366,11 @@
                                 id: scryfallCard.id,
                                 name: scryfallCard.name,
                                 type_line: scryfallCard.type_line,
-                                image_url: faceURL, // Use the custom art from JSON
+                                image_url: faceURL,
                                 scryfall_uri: scryfallCard.scryfall_uri,
                                 cmc: scryfallCard.cmc || 0,
                                 colors: scryfallCard.colors || [],
+                                color_identity: scryfallCard.color_identity || [],
                                 keywords: scryfallCard.keywords || [],
                                 legalities: scryfallCard.legalities || {}
                             });
@@ -6382,6 +7381,12 @@
                     }
                 }
             }
+
+            // Auto-detect tokens from all_parts of fetched cards
+            updateProgress(totalCards, totalCards, '- Detecting tokens…');
+            const allFetchedCards = [...cardCache.values()];
+            await autoDetectTokens(deck, allFetchedCards);
+            console.log(`Legacy import complete: commanders=${deck.commanders.length}, cards=${deck.cards.length}, tokens=${deck.tokens.length}`);
         }
 
         function resetCardBackToDefault() {
@@ -6414,7 +7419,7 @@
             const newName = document.getElementById('deckNameInput').value.trim();
             
             if (!newName) {
-                showToast('Please enter a deck name', 'error');
+                showNotification('Please enter a deck name', 'error');
                 return;
             }
             
@@ -6424,7 +7429,7 @@
             saveDecks();
             updateDeckSelector();
             closeRenameDeckModal();
-            showToast('Deck renamed successfully', 'success');
+            showNotification('Deck renamed successfully', 'success');
         }
 
         function openDeleteDeckModal() {
@@ -6452,6 +7457,8 @@
         }
 
         function confirmDeleteDeck() {
+            // Capture the name before splice — same fallback as the confirm modal uses
+            const deletedName = decks[currentDeckIndex].name || `Deck ${currentDeckIndex + 1}`;
             decks.splice(currentDeckIndex, 1);
             
             // If this was the last deck, create a new blank one
@@ -6469,7 +7476,40 @@
             updateDeckSelector();
             renderDeck();
             closeDeleteDeckModal();
-            showToast('Deck deleted', 'success');
+            showNotification(`Deleted "${deletedName}"`, 'success');
+        }
+
+        // Returns a unique "(Copy)" / "(Copy 2)" / "(Copy 3)" ... name based on
+        // the source deck's name and the names already in use.
+        function generateDuplicateName(sourceName) {
+            const existingNames = new Set(decks.map(d => d.name));
+            // Strip any existing " (Copy)" / " (Copy N)" suffix so duplicating a copy
+            // gives "Foo (Copy 2)" rather than "Foo (Copy) (Copy)".
+            const baseName = sourceName.replace(/ \(Copy(?: \d+)?\)$/, '');
+            let candidate = `${baseName} (Copy)`;
+            let n = 2;
+            while (existingNames.has(candidate)) {
+                candidate = `${baseName} (Copy ${n})`;
+                n++;
+            }
+            return candidate;
+        }
+
+        function duplicateCurrentDeck() {
+            const source = getCurrentDeck();
+            // Deep clone — deck contents are plain JSON, so this is safe and reliable.
+            const copy = JSON.parse(JSON.stringify(source));
+            copy.name = generateDuplicateName(source.name || `Deck ${currentDeckIndex + 1}`);
+
+            // Insert directly after the source so the duplicate sits adjacent to it
+            decks.splice(currentDeckIndex + 1, 0, copy);
+            currentDeckIndex = currentDeckIndex + 1;
+
+            saveDecks();
+            updateDeckSelector();
+            renderDeck();
+            document.getElementById('deckMenu').classList.remove('show');
+            showNotification(`Duplicated as "${copy.name}"`, 'success');
         }
 
         function updateCardBackPreview() {
