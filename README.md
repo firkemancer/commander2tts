@@ -15,6 +15,8 @@ For nightly versions you'll need to host it locally, check the [Quick Start](htt
 - Multiple deck management
 - Export to Tabletop Simulator's custom object JSON format
 - Local storage (no account needed)
+- Themes based on color combinations/commander(s) color identity
+- Deck statistics (mana curve, deck validation errors, average CMC, cards per type, color distribution)
 
 ## Quick Start
 
