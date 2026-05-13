@@ -4121,21 +4121,194 @@
             showNotification('Settings exported successfully', 'success');
         }
 
+        // Returns true if localStorage has no user-created decks, favorites, or custom art.
+        // A single auto-created empty default deck still counts as empty.
+        function isLocalStorageEmpty() {
+            try {
+                const savedDecks = JSON.parse(localStorage.getItem('commander2tts_decks') || '[]');
+                const hasDeckContent = Array.isArray(savedDecks) && savedDecks.some(d => {
+                    if (!d) return false;
+                    const hasCards = Array.isArray(d.cards) && d.cards.length > 0;
+                    const hasCommanders = Array.isArray(d.commanders) && d.commanders.length > 0;
+                    const hasTokens = Array.isArray(d.tokens) && d.tokens.length > 0;
+                    return hasCards || hasCommanders || hasTokens;
+                });
+                if (hasDeckContent) return false;
+
+                const favorites = JSON.parse(localStorage.getItem('commander2tts_favorites') || '{}');
+                if (favorites && Object.keys(favorites).length > 0) return false;
+
+                const customArt = JSON.parse(localStorage.getItem('commander2tts_custom_art') || '{}');
+                if (customArt && Object.keys(customArt).length > 0) return false;
+
+                return true;
+            } catch {
+                // If parsing fails, treat as non-empty so the user gets the prompt
+                return false;
+            }
+        }
+
+        // Three-option dialog: Merge / Overwrite / Cancel
+        function showImportChoiceDialog(onMerge, onOverwrite) {
+            const existing = document.getElementById('importChoiceModal');
+            if (existing) existing.remove();
+
+            const modal = document.createElement('div');
+            modal.className = 'modal active';
+            modal.id = 'importChoiceModal';
+            modal.style.zIndex = '3000';
+            modal.innerHTML = `
+                <div class="modal-content" style="max-width: 440px; padding: 1.5rem;">
+                    <button class="modal-close" id="closeImportChoice">✕</button>
+                    <h2 class="modal-title" style="font-size: 1.2rem; margin-bottom: 0.75rem;">Import Backup</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1rem; line-height: 1.4;">You already have decks, favorites, or custom art saved.<br><br><strong>Merge</strong> adds the backup's decks alongside yours and combines favorites and custom art.<br><br><strong>Overwrite</strong> replaces all existing data with the backup.</p>
+                    <div class="card-back-actions" style="gap: 0.5rem; flex-wrap: wrap;">
+                        <button class="card-back-btn" id="cancelImportChoice" style="background: var(--bg-secondary); color: var(--text-primary); border: 2px solid var(--border);">Cancel</button>
+                        <button class="card-back-btn" id="mergeImportChoice" style="background: #27ae60; color: white;">Merge</button>
+                        <button class="card-back-btn" id="overwriteImportChoice" style="background: #e74c3c; color: white;">Overwrite</button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+
+            const close = () => { modal.remove(); };
+            modal.querySelector('#closeImportChoice').addEventListener('click', close);
+            modal.querySelector('#cancelImportChoice').addEventListener('click', close);
+            modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+            modal.querySelector('#mergeImportChoice').addEventListener('click', () => {
+                close();
+                onMerge();
+            });
+            modal.querySelector('#overwriteImportChoice').addEventListener('click', () => {
+                close();
+                onOverwrite();
+            });
+        }
+
+        // Replaces every commander2tts_* key (plus theme keys) with the imported data
+        function overwriteImport(data) {
+            const keysToRemove = [];
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key.startsWith('commander2tts') || key === 'theme' || key === 'themeColor') {
+                    keysToRemove.push(key);
+                }
+            }
+            keysToRemove.forEach(key => localStorage.removeItem(key));
+            Object.entries(data).forEach(([key, value]) => {
+                localStorage.setItem(key, value);
+            });
+        }
+
+        // Combines decks, favorites, and custom art; keeps local theme/other preferences
+        function mergeImport(data) {
+            // Decks: append imported, dropping a lone empty default deck from local if present
+            try {
+                const localDecks = JSON.parse(localStorage.getItem('commander2tts_decks') || '[]');
+                const importedDecks = JSON.parse(data['commander2tts_decks'] || '[]');
+                if (Array.isArray(importedDecks) && importedDecks.length > 0) {
+                    const filteredLocal = (Array.isArray(localDecks) ? localDecks : []).filter(d => {
+                        if (!d) return false;
+                        const hasCards = Array.isArray(d.cards) && d.cards.length > 0;
+                        const hasCommanders = Array.isArray(d.commanders) && d.commanders.length > 0;
+                        const hasTokens = Array.isArray(d.tokens) && d.tokens.length > 0;
+                        return hasCards || hasCommanders || hasTokens;
+                    });
+                    const merged = [...filteredLocal, ...importedDecks];
+                    localStorage.setItem('commander2tts_decks', JSON.stringify(merged));
+                }
+            } catch {}
+
+            // Favorites: deep-merge per card name, dedupe URLs
+            try {
+                const localFavs = JSON.parse(localStorage.getItem('commander2tts_favorites') || '{}');
+                const importedFavs = JSON.parse(data['commander2tts_favorites'] || '{}');
+                const merged = { ...localFavs };
+                Object.entries(importedFavs).forEach(([cardName, urls]) => {
+                    if (!Array.isArray(urls)) return;
+                    const existing = Array.isArray(merged[cardName]) ? merged[cardName] : [];
+                    merged[cardName] = Array.from(new Set([...existing, ...urls]));
+                });
+                localStorage.setItem('commander2tts_favorites', JSON.stringify(merged));
+            } catch {}
+
+            // Custom art: same deep-merge approach
+            try {
+                const localArt = JSON.parse(localStorage.getItem('commander2tts_custom_art') || '{}');
+                const importedArt = JSON.parse(data['commander2tts_custom_art'] || '{}');
+                const merged = { ...localArt };
+                Object.entries(importedArt).forEach(([cardName, urls]) => {
+                    if (!Array.isArray(urls)) return;
+                    const existing = Array.isArray(merged[cardName]) ? merged[cardName] : [];
+                    merged[cardName] = Array.from(new Set([...existing, ...urls]));
+                });
+                localStorage.setItem('commander2tts_custom_art', JSON.stringify(merged));
+            } catch {}
+
+            // Any other commander2tts_* keys in the backup that don't exist locally — copy them in.
+            // Theme/themeColor and existing keys are left alone so the user's current preferences win.
+            Object.entries(data).forEach(([key, value]) => {
+                if (key === 'commander2tts_decks' ||
+                    key === 'commander2tts_favorites' ||
+                    key === 'commander2tts_custom_art') return;
+                if (key === 'theme' || key === 'themeColor') return;
+                if (localStorage.getItem(key) === null) {
+                    localStorage.setItem(key, value);
+                }
+            });
+        }
+
         function importLocalStorageData(e) {
             const file = e.target.files[0];
             if (!file) return;
             const reader = new FileReader();
             reader.onload = (event) => {
+                let data;
                 try {
-                    const data = JSON.parse(event.target.result);
-                    Object.entries(data).forEach(([key, value]) => {
-                        localStorage.setItem(key, value);
-                    });
-                    showNotification('Settings imported. Reloading...', 'success');
-                    setTimeout(() => location.reload(), 1000);
+                    data = JSON.parse(event.target.result);
                 } catch (err) {
                     showNotification('Invalid settings file', 'error');
+                    return;
                 }
+                if (!data || typeof data !== 'object') {
+                    showNotification('Invalid settings file', 'error');
+                    return;
+                }
+
+                if (isLocalStorageEmpty()) {
+                    // Nothing to conflict with — just import
+                    try {
+                        Object.entries(data).forEach(([key, value]) => {
+                            localStorage.setItem(key, value);
+                        });
+                        showNotification('Settings imported. Reloading...', 'success');
+                        setTimeout(() => location.reload(), 1000);
+                    } catch {
+                        showNotification('Invalid settings file', 'error');
+                    }
+                    return;
+                }
+
+                showImportChoiceDialog(
+                    () => {
+                        try {
+                            mergeImport(data);
+                            showNotification('Backup merged. Reloading...', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } catch {
+                            showNotification('Failed to merge backup', 'error');
+                        }
+                    },
+                    () => {
+                        try {
+                            overwriteImport(data);
+                            showNotification('Backup imported. Reloading...', 'success');
+                            setTimeout(() => location.reload(), 1000);
+                        } catch {
+                            showNotification('Failed to import backup', 'error');
+                        }
+                    }
+                );
             };
             reader.readAsText(file);
             e.target.value = '';
