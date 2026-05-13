@@ -3259,6 +3259,9 @@
                     <div class="deck-menu-item" id="renameDeckBtn">
                         <span>Rename Deck</span>
                     </div>
+                    <div class="deck-menu-item" id="duplicateDeckBtn">
+                        <span>Duplicate Deck</span>
+                    </div>
                     <div class="deck-menu-item" id="exportDeckBtn">
                         <span>Export to TTS</span>
                         <img class="card-back-preview" id="cardBackPreview" src="https://i.imgur.com/tsTuiWN.png" alt="Card back">
@@ -3946,6 +3949,7 @@
             document.getElementById('exportDeckBtn').addEventListener('click', openExportModal);
             document.getElementById('deleteDeckBtn').addEventListener('click', openDeleteDeckModal);
             document.getElementById('renameDeckBtn').addEventListener('click', openRenameDeckModal);
+            document.getElementById('duplicateDeckBtn').addEventListener('click', duplicateCurrentDeck);
 
             // Delete Deck Confirmation Modal
             document.getElementById('closeDeleteDeckModal').addEventListener('click', closeDeleteDeckModal);
@@ -7415,7 +7419,7 @@
             const newName = document.getElementById('deckNameInput').value.trim();
             
             if (!newName) {
-                showToast('Please enter a deck name', 'error');
+                showNotification('Please enter a deck name', 'error');
                 return;
             }
             
@@ -7425,7 +7429,7 @@
             saveDecks();
             updateDeckSelector();
             closeRenameDeckModal();
-            showToast('Deck renamed successfully', 'success');
+            showNotification('Deck renamed successfully', 'success');
         }
 
         function openDeleteDeckModal() {
@@ -7453,6 +7457,8 @@
         }
 
         function confirmDeleteDeck() {
+            // Capture the name before splice — same fallback as the confirm modal uses
+            const deletedName = decks[currentDeckIndex].name || `Deck ${currentDeckIndex + 1}`;
             decks.splice(currentDeckIndex, 1);
             
             // If this was the last deck, create a new blank one
@@ -7470,7 +7476,40 @@
             updateDeckSelector();
             renderDeck();
             closeDeleteDeckModal();
-            showToast('Deck deleted', 'success');
+            showNotification(`Deleted "${deletedName}"`, 'success');
+        }
+
+        // Returns a unique "(Copy)" / "(Copy 2)" / "(Copy 3)" ... name based on
+        // the source deck's name and the names already in use.
+        function generateDuplicateName(sourceName) {
+            const existingNames = new Set(decks.map(d => d.name));
+            // Strip any existing " (Copy)" / " (Copy N)" suffix so duplicating a copy
+            // gives "Foo (Copy 2)" rather than "Foo (Copy) (Copy)".
+            const baseName = sourceName.replace(/ \(Copy(?: \d+)?\)$/, '');
+            let candidate = `${baseName} (Copy)`;
+            let n = 2;
+            while (existingNames.has(candidate)) {
+                candidate = `${baseName} (Copy ${n})`;
+                n++;
+            }
+            return candidate;
+        }
+
+        function duplicateCurrentDeck() {
+            const source = getCurrentDeck();
+            // Deep clone — deck contents are plain JSON, so this is safe and reliable.
+            const copy = JSON.parse(JSON.stringify(source));
+            copy.name = generateDuplicateName(source.name || `Deck ${currentDeckIndex + 1}`);
+
+            // Insert directly after the source so the duplicate sits adjacent to it
+            decks.splice(currentDeckIndex + 1, 0, copy);
+            currentDeckIndex = currentDeckIndex + 1;
+
+            saveDecks();
+            updateDeckSelector();
+            renderDeck();
+            document.getElementById('deckMenu').classList.remove('show');
+            showNotification(`Duplicated as "${copy.name}"`, 'success');
         }
 
         function updateCardBackPreview() {
