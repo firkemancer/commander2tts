@@ -2340,6 +2340,13 @@
             padding: 0.5rem 0;
         }
 
+        /* When commander color-identity matching is on, manual theme picks are disabled */
+        body.themes-locked .settings-themes-grid,
+        body.themes-locked .settings-section-label {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
         .settings-btn {
             padding: 0.6rem 1.2rem;
             border: 2px solid var(--border);
@@ -3216,11 +3223,17 @@
         (function() {
             const savedTheme = localStorage.getItem('theme');
             const savedColor = localStorage.getItem('themeColor');
+            const matchCI = localStorage.getItem('commander2tts_themeMatchCI') === 'true';
             if (savedTheme) {
                 document.body.setAttribute('data-theme', savedTheme);
             }
-            if (savedColor) {
+            // If commander color matching is on, leave data-color at its default
+            // until renderDeck() applies the correct deck-based theme.
+            if (savedColor && !matchCI) {
                 document.body.setAttribute('data-color', savedColor);
+            }
+            if (matchCI) {
+                document.body.classList.add('themes-locked');
             }
         })();
     </script>
@@ -3503,6 +3516,14 @@
                             <div class="settings-row-desc">Switch between light and dark theme</div>
                         </div>
                         <button class="settings-toggle" id="darkModeToggle"></button>
+                    </div>
+
+                    <div class="settings-row">
+                        <div>
+                            <div class="settings-row-label">Match Commander Colors</div>
+                            <div class="settings-row-desc">Auto-set theme from the active deck's commander color identity</div>
+                        </div>
+                        <button class="settings-toggle" id="matchCommanderColorsToggle"></button>
                     </div>
 
                     <div class="settings-section-label">Solid</div>
@@ -4037,6 +4058,8 @@
                 updateDarkModeToggle();
             });
 
+            document.getElementById('matchCommanderColorsToggle').addEventListener('click', toggleMatchCommanderColors);
+
             // Theme options
             document.querySelectorAll('.theme-option').forEach(option => {
                 option.addEventListener('click', () => {
@@ -4051,7 +4074,82 @@
             });
             document.getElementById('importLocalStorageFile').addEventListener('change', importLocalStorageData);
             document.getElementById('wipeLocalStorage').addEventListener('click', wipeLocalStorageData);
+
+            // ===== Keyboard shortcuts =====
+            document.addEventListener('keydown', handleGlobalKeydown);
         }
+
+        // Returns true if the user is currently typing in an editable element.
+        // Used to avoid hijacking keys while the user is composing text.
+        function isTypingInInput(target) {
+            if (!target) return false;
+            const tag = target.tagName;
+            if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return true;
+            if (target.isContentEditable) return true;
+            return false;
+        }
+
+        // Closes the topmost open modal/overlay. Returns true if something was closed.
+        // Loading overlay is intentionally excluded — it's not user-dismissable.
+        function closeTopmostModal() {
+            // Dynamic modals first (z-index: 3000) — they're always on top when present
+            const dynamicModal = document.getElementById('genericConfirmModal')
+                              || document.getElementById('importChoiceModal');
+            if (dynamicModal) {
+                dynamicModal.remove();
+                return true;
+            }
+
+            // Static modals, ordered by likelihood of being layered on top
+            const staticModalClosers = [
+                { id: 'altArtModal', close: closeAltArtModal },
+                { id: 'commanderConfirmModal', close: closeCommanderConfirmModal },
+                { id: 'exportModal', close: closeExportModal },
+                { id: 'importDeckModal', close: closeImportDeckModal },
+                { id: 'renameDeckModal', close: closeRenameDeckModal },
+                { id: 'deleteDeckModal', close: closeDeleteDeckModal },
+                { id: 'settingsOverlay', close: closeSettings }
+            ];
+            for (const { id, close } of staticModalClosers) {
+                const el = document.getElementById(id);
+                if (el && el.classList.contains('active')) {
+                    close();
+                    return true;
+                }
+            }
+
+            // Stats sidebar — slides in from the right, treat like a modal for Esc purposes
+            const statsBtn = document.getElementById('statsBtn');
+            if (statsBtn && statsBtn.classList.contains('active')) {
+                closeStatsSidebar();
+                return true;
+            }
+
+            return false;
+        }
+
+        function handleGlobalKeydown(e) {
+            // Esc: close topmost modal/overlay. Works even from inside inputs
+            // (so you can hit Esc to bail out of, say, the rename modal).
+            if (e.key === 'Escape') {
+                if (closeTopmostModal()) {
+                    e.preventDefault();
+                }
+                return;
+            }
+
+            // '/': focus the deck search bar. Only when not already typing somewhere.
+            if (e.key === '/' && !isTypingInInput(e.target)) {
+                const deckSearch = document.getElementById('deckSearch');
+                if (deckSearch) {
+                    e.preventDefault(); // stop the '/' from being typed into the input
+                    deckSearch.focus();
+                    deckSearch.select();
+                }
+                return;
+            }
+        }
+        // ===== /Keyboard shortcuts =====
 
         function toggleTheme() {
             const body = document.body;
@@ -4078,6 +4176,7 @@
             }
             updateThemeOptionActive();
             updateDarkModeToggle();
+            updateMatchCommanderColorsToggle();
         }
 
         function setColorTheme(color) {
@@ -4085,6 +4184,109 @@
             localStorage.setItem('themeColor', color);
             updateThemeOptionActive();
         }
+
+        // ===== Match Commander Colors feature =====
+        // Maps a sorted WUBRG color-identity key to the corresponding theme name.
+        // Order is canonical WUBRG so we can stringify the sorted array as the key.
+        const COLOR_IDENTITY_THEMES = {
+            // Colorless → fall back to default (purple)
+            '': 'purple',
+            // Mono
+            'W': 'white',
+            'U': 'blue',
+            'B': 'black',
+            'R': 'red',
+            'G': 'green',
+            // Guilds (2-color)
+            'W,U': 'azorius',
+            'U,B': 'dimir',
+            'B,R': 'rakdos',
+            'R,G': 'gruul',
+            'W,G': 'selesnya',
+            'W,B': 'orzhov',
+            'U,R': 'izzet',
+            'B,G': 'golgari',
+            'W,R': 'boros',
+            'U,G': 'simic',
+            // Shards (3-color, allied)
+            'W,U,B': 'esper',
+            'U,B,R': 'grixis',
+            'B,R,G': 'jund',
+            'W,R,G': 'naya',
+            'W,U,G': 'bant',
+            // Wedges (3-color, enemy)
+            'W,B,R': 'mardu',
+            'U,R,G': 'temur',
+            'W,B,G': 'abzan',
+            'W,U,R': 'jeskai',
+            'U,B,G': 'sultai',
+            // Nephilim (4-color)
+            'U,B,R,G': 'glint-eye',
+            'W,B,R,G': 'dune-brood',
+            'W,U,R,G': 'ink-treader',
+            'W,U,B,G': 'witch-maw',
+            'W,U,B,R': 'yore-tiller',
+            // 5-color
+            'W,U,B,R,G': 'wubrg'
+        };
+
+        const WUBRG_ORDER = { W: 0, U: 1, B: 2, R: 3, G: 4 };
+
+        // Returns the theme name for a deck based on the union of its commanders' color identities.
+        // Falls back to purple if no commander or no recognized identity.
+        function getThemeForDeck(deck) {
+            if (!deck || !Array.isArray(deck.commanders) || deck.commanders.length === 0) {
+                return 'purple';
+            }
+            const identity = new Set();
+            deck.commanders.forEach(cmd => {
+                if (Array.isArray(cmd.color_identity)) {
+                    cmd.color_identity.forEach(c => {
+                        if (c in WUBRG_ORDER) identity.add(c);
+                    });
+                }
+            });
+            const sorted = Array.from(identity).sort((a, b) => WUBRG_ORDER[a] - WUBRG_ORDER[b]);
+            const key = sorted.join(',');
+            return COLOR_IDENTITY_THEMES[key] || 'purple';
+        }
+
+        function isMatchCommanderColorsEnabled() {
+            return localStorage.getItem('commander2tts_themeMatchCI') === 'true';
+        }
+
+        // Applies the active deck's commander color identity as the current theme.
+        // Does NOT touch localStorage.themeColor — that preserves the user's manual choice
+        // so toggling the feature off restores their original theme.
+        function applyCommanderColorTheme() {
+            if (!isMatchCommanderColorsEnabled()) return;
+            const deck = (typeof getCurrentDeck === 'function') ? getCurrentDeck() : null;
+            const color = getThemeForDeck(deck);
+            document.body.setAttribute('data-color', color);
+            updateThemeOptionActive();
+        }
+
+        function updateMatchCommanderColorsToggle() {
+            const on = isMatchCommanderColorsEnabled();
+            const btn = document.getElementById('matchCommanderColorsToggle');
+            if (btn) btn.classList.toggle('active', on);
+            document.body.classList.toggle('themes-locked', on);
+        }
+
+        function toggleMatchCommanderColors() {
+            const turningOn = !isMatchCommanderColorsEnabled();
+            localStorage.setItem('commander2tts_themeMatchCI', turningOn ? 'true' : 'false');
+            updateMatchCommanderColorsToggle();
+            if (turningOn) {
+                applyCommanderColorTheme();
+            } else {
+                // Restore the user's manually chosen theme (purple if none saved)
+                const savedColor = localStorage.getItem('themeColor') || 'purple';
+                document.body.setAttribute('data-color', savedColor);
+                updateThemeOptionActive();
+            }
+        }
+        // ===== /Match Commander Colors feature =====
 
         function updateThemeOptionActive() {
             const currentColor = document.body.getAttribute('data-color') || 'purple';
@@ -4096,6 +4298,7 @@
         function openSettings() {
             updateDarkModeToggle();
             updateThemeOptionActive();
+            updateMatchCommanderColorsToggle();
             document.getElementById('settingsOverlay').classList.add('active');
         }
 
@@ -5248,6 +5451,9 @@
         // Render deck
         function renderDeck() {
             const deck = getCurrentDeck();
+
+            // Apply commander color identity theme if enabled
+            applyCommanderColorTheme();
             
             // Render commander(s)
             const commanderList = document.getElementById('commanderList');
