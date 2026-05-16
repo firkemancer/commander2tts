@@ -169,12 +169,17 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 
 /* Deck tab strip */
+.tab-strip {
+  display: flex; align-items: stretch; min-width: 0;
+  gap: 6px;
+}
 .tabs {
   display: flex; align-items: stretch; gap: 4px;
-  min-width: 0; overflow-x: auto;
-  scrollbar-width: thin;
+  min-width: 0; flex: 1 1 auto;
+  overflow: hidden;
+  padding-bottom: 14px;
+  margin-bottom: -14px;
 }
-.tabs::-webkit-scrollbar { height: 4px; }
 .tab {
   display: flex; align-items: center; gap: 8px;
   padding: 6px 4px 6px 10px;
@@ -182,12 +187,13 @@ input, select, textarea { font: inherit; color: inherit; }
   border: 1px solid transparent;
   border-bottom: none;
   position: relative; top: 11px;
-  max-width: 240px; min-width: 0;
+  max-width: 240px;
+  min-width: 40px;
   background: transparent;
   transition: background 120ms;
   cursor: pointer;
   user-select: none;
-  flex-shrink: 0;
+  flex: 1 1 0;
 }
 .tab:hover { background: color-mix(in oklch, var(--ink) 5%, transparent); }
 .tab.active {
@@ -202,8 +208,9 @@ input, select, textarea { font: inherit; color: inherit; }
 }
 .tab .label {
   font-family: 'Spectral', serif; font-size: 14px; font-weight: 500;
+  line-height: 1.4; padding: 2px 0;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  min-width: 0;
+  min-width: 0; flex: 1 1 auto;
 }
 .tab .count { font-family: 'IBM Plex Mono', monospace; font-size: 11px; color: var(--ink-3); flex-shrink: 0; }
 .tab .tab-close {
@@ -217,16 +224,27 @@ input, select, textarea { font: inherit; color: inherit; }
 .tab:hover .tab-close, .tab.active .tab-close { opacity: 1; }
 .tab .tab-close:hover { background: color-mix(in oklch, var(--ink) 12%, transparent); color: var(--ink); }
 .tab .tab-close .material-icons { font-size: 13px; }
-.tab-new {
+/* When tab is narrow, hide the count and close button to keep label visible */
+.tab.narrow .count { display: none; }
+.tab.narrow .tab-close { display: none; }
+.tab.narrow.active .tab-close { display: grid; }
+
+.tab-controls { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }
+.tab-ctrl {
   padding: 0 10px; align-self: center;
-  color: var(--ink-3); font-size: 18px; line-height: 1;
+  color: var(--ink-3); line-height: 1;
   border-radius: 6px;
   display: inline-grid; place-items: center;
   height: 32px; min-width: 32px;
-  flex-shrink: 0;
 }
-.tab-new:hover { background: color-mix(in oklch, var(--ink) 8%, transparent); color: var(--ink); }
-.tab-new .material-icons { font-size: 16px; }
+.tab-ctrl:hover { background: color-mix(in oklch, var(--ink) 8%, transparent); color: var(--ink); }
+.tab-ctrl .material-icons { font-size: 18px; }
+.tab-ctrl.has-hidden::after {
+  content: ''; position: absolute; top: 7px; right: 6px;
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--accent);
+}
+.tab-ctrl { position: relative; }
 
 .actions { display: flex; align-items: center; gap: 8px; }
 .btn {
@@ -252,7 +270,8 @@ input, select, textarea { font: inherit; color: inherit; }
 .btn.danger:hover { background: color-mix(in oklch, var(--bad) 10%, var(--surface)); }
 .btn.icon { padding: 7px; width: 32px; justify-content: center; }
 .btn .material-icons { font-size: 18px; line-height: 1; }
-.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn:disabled, .btn.disabled { opacity: 0.45; cursor: not-allowed; }
+.btn:disabled:hover, .btn.disabled:hover { background: var(--surface); border-color: var(--rule); filter: none; }
 
 /* ─── Main workspace ─── */
 .workspace {
@@ -617,6 +636,7 @@ input, select, textarea { font: inherit; color: inherit; }
   animation: pop 220ms cubic-bezier(.2,.6,.2,1);
   display: flex; flex-direction: column;
 }
+.modal-shell { display: contents; }
 .modal-head {
   display: flex; align-items: center; justify-content: space-between;
   padding: 18px 24px;
@@ -626,7 +646,7 @@ input, select, textarea { font: inherit; color: inherit; }
 .modal-head h2 { font-family: 'Spectral', serif; font-size: 22px; font-weight: 500; margin: 0; letter-spacing: -0.01em; }
 .modal-close { width: 32px; height: 32px; border-radius: 8px; display: grid; place-items: center; color: var(--ink-2); }
 .modal-close:hover { background: color-mix(in oklch, var(--ink) 7%, transparent); color: var(--ink); }
-.modal-body { padding: 22px 24px; overflow-y: auto; }
+.modal-body { padding: 22px 24px; overflow-y: auto; flex: 1 1 auto; min-height: 0; }
 .modal-foot {
   display: flex; justify-content: flex-end; gap: 10px;
   padding: 14px 24px;
@@ -847,18 +867,23 @@ input, select, textarea { font: inherit; color: inherit; }
 /* Library / decks modal */
 .lib-list { display: flex; flex-direction: column; gap: 6px; }
 .lib-row {
-  display: grid; grid-template-columns: 14px 1fr auto; gap: 14px;
+  display: grid; grid-template-columns: 14px minmax(0, 1fr) auto; gap: 14px;
   align-items: center;
   padding: 12px 16px;
   border: 1px solid var(--rule);
   background: var(--surface);
   border-radius: 10px;
 }
+.lib-row > div:nth-child(2) { min-width: 0; }
 .lib-row.active { border-color: var(--accent); background: color-mix(in oklch, var(--accent) 10%, var(--surface)); }
 .lib-pip { width: 12px; height: 12px; border-radius: 50%; }
-.lib-name { font-family: 'Spectral', serif; font-size: 16px; font-weight: 500; letter-spacing: -0.005em; }
-.lib-sub { font-size: 12px; color: var(--ink-3); margin-top: 2px; display: flex; align-items: center; gap: 8px; }
-.lib-actions { display: flex; gap: 6px; align-items: center; }
+.lib-name { font-family: 'Spectral', serif; font-size: 16px; font-weight: 500; letter-spacing: -0.005em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lib-sub { font-size: 12px; color: var(--ink-3); margin-top: 2px; display: flex; align-items: center; gap: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.lib-sub > * { flex-shrink: 0; }
+.lib-sub > span:first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; flex-shrink: 1; }
+.lib-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.lib-actions .btn { padding: 6px 10px; font-size: 12px; white-space: nowrap; }
+.lib-actions .btn.icon { padding: 6px; width: 30px; }
 
 /* Generic confirm */
 .confirm-list {
@@ -996,7 +1021,17 @@ input, select, textarea { font: inherit; color: inherit; }
       <span class="brand-title" style="display:none;">Commander2TTS</span>
     </div>
 
-    <div class="tabs" id="deckTabs"></div>
+    <div class="tab-strip">
+      <div class="tabs" id="deckTabs"></div>
+      <div class="tab-controls">
+        <button class="tab-ctrl" id="deckLibraryBtn" title="Deck library">
+          <span class="material-icons">folder_open</span>
+        </button>
+        <button class="tab-ctrl" id="newDeckBtn" title="New deck">
+          <span class="material-icons">add</span>
+        </button>
+      </div>
+    </div>
 
     <div class="actions">
       <button class="btn ghost icon" id="searchBtn" title="Search cards">
@@ -1261,6 +1296,8 @@ function icon(name, sz) {
 // ─────────────────────────────────────────────────────────────────────────
 // localStorage persistence
 // ─────────────────────────────────────────────────────────────────────────
+const MAX_OPEN_TABS = 10;
+
 function loadDecks() {
   const saved = localStorage.getItem('commander2tts_decks');
   if (saved) {
@@ -1276,13 +1313,29 @@ function loadDecks() {
         if (!deck.commanders) deck.commanders = [];
         if (!deck.cards) deck.cards = [];
         if (!deck.tokens) deck.tokens = [];
+        // Open-in-tab flag: default true for backwards compat
+        if (deck.open === undefined) deck.open = true;
       });
+      // Cap open tabs to MAX_OPEN_TABS — keep the first N open if more were somehow saved
+      const openIndices = STATE.decks.map((d, i) => d.open ? i : -1).filter(i => i >= 0);
+      if (openIndices.length > MAX_OPEN_TABS) {
+        openIndices.slice(MAX_OPEN_TABS).forEach(i => { STATE.decks[i].open = false; });
+      }
+      // Ensure at least one open tab if any decks exist
+      if (STATE.decks.length > 0 && !STATE.decks.some(d => d.open)) {
+        STATE.decks[0].open = true;
+      }
     } catch {
       STATE.decks = [];
     }
   }
   if (STATE.decks.length === 0) {
     STATE.decks.push(createNewDeck());
+  }
+  // currentDeckIndex must point at an open deck
+  if (!STATE.decks[STATE.currentDeckIndex] || !STATE.decks[STATE.currentDeckIndex].open) {
+    const firstOpen = STATE.decks.findIndex(d => d.open);
+    STATE.currentDeckIndex = firstOpen >= 0 ? firstOpen : 0;
   }
 }
 function saveDecks() {
@@ -1295,6 +1348,7 @@ function createNewDeck() {
     cards: [],
     tokens: [],
     cardBackUrl: DEFAULT_CARD_BACK,
+    open: true,
   };
 }
 function getCurrentDeck() {
@@ -1304,6 +1358,46 @@ function isDeckEmpty(deck) {
   return deck.cards.length === 0 &&
          (!deck.commanders || deck.commanders.length === 0) &&
          (!deck.tokens || deck.tokens.length === 0);
+}
+
+// Tab management
+function getOpenCount() { return STATE.decks.filter(d => d.open).length; }
+
+// Opens a deck (sets open=true and makes it active). If at cap, returns false and shows a notice.
+function openDeckInTab(idx, makeActive = true) {
+  const deck = STATE.decks[idx];
+  if (!deck) return false;
+  if (!deck.open) {
+    if (getOpenCount() >= MAX_OPEN_TABS) {
+      showNotification(`You can have at most ${MAX_OPEN_TABS} decks open at once. Close one first.`, 'warning', 'Tab limit');
+      return false;
+    }
+    deck.open = true;
+  }
+  if (makeActive) STATE.currentDeckIndex = idx;
+  saveDecks();
+  return true;
+}
+
+// Closes a deck (sets open=false). If it was the active tab, switches to the previous/next open tab.
+function closeDeckTab(idx) {
+  const deck = STATE.decks[idx];
+  if (!deck || !deck.open) return;
+  deck.open = false;
+  // If we just closed the active tab, pick a new active
+  if (STATE.currentDeckIndex === idx) {
+    const openIndices = STATE.decks.map((d, i) => d.open ? i : -1).filter(i => i >= 0);
+    if (openIndices.length === 0) {
+      // No open tabs left — auto-open the deck we just closed back, or create new
+      deck.open = true;
+      return; // refuse to close the last tab
+    }
+    // Pick the closest still-open tab (prefer previous)
+    let next = openIndices.filter(i => i < idx).pop();
+    if (next === undefined) next = openIndices[0];
+    STATE.currentDeckIndex = next;
+  }
+  saveDecks();
 }
 
 // Alt art favorites and custom art storage
@@ -1758,18 +1852,24 @@ function defaultFilenameFor(deck) {
 function renderTabs() {
   const tabs = $('deckTabs');
   tabs.innerHTML = '';
-  STATE.decks.forEach((deck, idx) => {
+  // Only render decks marked as open
+  const openIndices = STATE.decks.map((d, i) => d.open ? i : -1).filter(i => i >= 0);
+  // Tabs get narrow if there are many; threshold is 6 → start hiding count/close.
+  const narrow = openIndices.length >= 6;
+  openIndices.forEach(idx => {
+    const deck = STATE.decks[idx];
     const isActive = idx === STATE.currentDeckIndex;
     const colorId = getThemeForDeck(deck);
     const theme = THEME_GROUPS.flatMap(g => g.items).find(t => t.id === colorId) || { swatch: ['#9b7fd4'] };
     const pipStyle = `linear-gradient(135deg, ${theme.swatch[0]}, ${theme.swatch[theme.swatch.length-1]})`;
     const tab = el('div', {
-      class: 'tab' + (isActive ? ' active' : ''),
+      class: 'tab' + (isActive ? ' active' : '') + (narrow ? ' narrow' : ''),
       role: 'button',
       title: deck.name,
       onclick: () => {
         if (STATE.currentDeckIndex !== idx) {
           STATE.currentDeckIndex = idx;
+          saveDecks();
           renderAll();
         }
       }
@@ -1779,22 +1879,26 @@ function renderTabs() {
       el('span', { class: 'count' }, String(deck.cards.length)),
       el('button', {
         class: 'tab-close', title: 'Close tab', 'aria-label': 'Close tab',
-        onclick: (e) => { e.stopPropagation(); openDeleteDeckModal(idx); }
+        onclick: (e) => {
+          e.stopPropagation();
+          // If there's only one open tab, the close button deletes the deck instead
+          if (openIndices.length === 1) {
+            openDeleteDeckModal(idx);
+          } else {
+            closeDeckTab(idx);
+            renderAll();
+          }
+        }
       }, [icon('close')])
     ]);
     tabs.appendChild(tab);
   });
-  const newBtn = el('button', {
-    class: 'tab-new', title: 'New deck',
-    onclick: () => {
-      STATE.decks.push(createNewDeck());
-      STATE.currentDeckIndex = STATE.decks.length - 1;
-      saveDecks();
-      renderAll();
-      showNotification('New deck created', 'success');
-    }
-  }, [icon('add')]);
-  tabs.appendChild(newBtn);
+  // Show the "open elsewhere" dot on the library button if any decks are closed
+  const libBtn = $('deckLibraryBtn');
+  if (libBtn) {
+    const hasClosed = STATE.decks.some(d => !d.open);
+    libBtn.classList.toggle('has-hidden', hasClosed);
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -2433,7 +2537,7 @@ function buildModalShell(titleText, body, footChildren) {
   const bodyEl = el('div', { class: 'modal-body' });
   if (Array.isArray(body)) body.forEach(c => bodyEl.appendChild(c));
   else if (body) bodyEl.appendChild(body);
-  const out = el('div', {}, [head, bodyEl]);
+  const out = el('div', { class: 'modal-shell' }, [head, bodyEl]);
   if (footChildren) {
     out.appendChild(el('div', { class: 'modal-foot' }, footChildren));
   }
@@ -2460,7 +2564,7 @@ function showConfirmDialog(opts) {
     el('h2', {}, opts.title),
     el('button', { class: 'modal-close', onclick: () => closeTopmostModal() }, [icon('close')])
   ]);
-  openModal({ content: el('div', {}, [head, body, foot]) });
+  openModal({ content: el('div', { class: 'modal-shell' }, [head, body, foot]) });
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -2540,7 +2644,7 @@ function openImportModal() {
     el('button', { class: 'btn ghost', onclick: () => closeTopmostModal() }, 'Cancel')
   ]);
 
-  openModal({ content: el('div', {}, [head, body, foot]) });
+  openModal({ content: el('div', { class: 'modal-shell' }, [head, body, foot]) });
   setTimeout(() => moxInput.focus(), 50);
 }
 
@@ -2571,13 +2675,16 @@ async function importFromMoxfield(deckId) {
     }
     if (!data) throw new Error('Could not fetch deck data. Try a different deck or import via TTS JSON.');
 
-    // Reuse current deck if empty, else new
+    // Reuse current deck if empty, else new (enforce tab cap)
     let deck;
     const current = getCurrentDeck();
     if (current && isDeckEmpty(current)) {
       deck = current;
       deck.cards = []; deck.tokens = []; deck.commanders = [];
     } else {
+      if (getOpenCount() >= MAX_OPEN_TABS) {
+        throw new Error(`You can have at most ${MAX_OPEN_TABS} decks open at once. Close one first.`);
+      }
       deck = createNewDeck();
       deck.cards = []; deck.tokens = []; deck.commanders = [];
       STATE.decks.push(deck);
@@ -2665,6 +2772,9 @@ async function importFromTTSJson(ttsJson, fileName = '') {
     deck = current;
     deck.cards = []; deck.tokens = []; deck.commanders = [];
   } else {
+    if (getOpenCount() >= MAX_OPEN_TABS) {
+      throw new Error(`You can have at most ${MAX_OPEN_TABS} decks open at once. Close one first.`);
+    }
     deck = createNewDeck();
     deck.cards = []; deck.tokens = []; deck.commanders = [];
     STATE.decks.push(deck);
@@ -2914,7 +3024,7 @@ function openExportModal() {
     el('button', { class: 'btn ghost', onclick: () => closeTopmostModal() }, 'Cancel'),
     el('button', { class: 'btn primary', onclick: doRealExport }, [icon('save'), document.createTextNode(' Save .json')])
   ]);
-  openModal({ content: el('div', {}, [head, body, foot]) });
+  openModal({ content: el('div', { class: 'modal-shell' }, [head, body, foot]) });
 }
 
 function generateTTSJson(deck) {
@@ -3384,7 +3494,7 @@ function openSearchModal() {
 
   openModal({
     className: 'search-modal',
-    content: el('div', {}, [head, body])
+    content: el('div', { class: 'modal-shell' }, [head, body])
   });
   setTimeout(() => inputEl.focus(), 50);
 }
@@ -3718,7 +3828,7 @@ function showImportChoiceDialog(onMerge, onOverwrite) {
     el('button', { class: 'btn', style: { background: 'var(--good)', color: 'white', borderColor: 'var(--good)' }, onclick: () => { closeTopmostModal(); onMerge(); } }, 'Merge'),
     el('button', { class: 'btn danger', onclick: () => { closeTopmostModal(); onOverwrite(); } }, 'Overwrite')
   ]);
-  openModal({ content: el('div', {}, [head, body, foot]) });
+  openModal({ content: el('div', { class: 'modal-shell' }, [head, body, foot]) });
 }
 
 function overwriteImport(data) {
@@ -3786,6 +3896,187 @@ function wipeLocalStorageData() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
+// Modal: Deck library
+// ─────────────────────────────────────────────────────────────────────────
+function openDeckLibraryModal() {
+  const head = el('div', { class: 'modal-head' }, [
+    el('h2', {}, 'Deck Library'),
+    el('button', { class: 'modal-close', onclick: () => closeTopmostModal() }, [icon('close')])
+  ]);
+
+  const statsWrap = el('div', { class: 'eyebrow', style: { marginBottom: '12px' } });
+  const listWrap = el('div', { class: 'lib-list' });
+  const body = el('div', { class: 'modal-body', style: { width: '600px', maxWidth: '100%' } });
+
+  const refresh = () => {
+    listWrap.innerHTML = '';
+    statsWrap.innerHTML = '';
+    const openCount = getOpenCount();
+    const atCap = openCount >= MAX_OPEN_TABS;
+    statsWrap.appendChild(el('span', {}, `${STATE.decks.length} total — ${openCount}/${MAX_OPEN_TABS} open`));
+
+    if (STATE.decks.length === 0) {
+      listWrap.appendChild(el('div', { class: 'empty' }, 'No decks saved.'));
+      return;
+    }
+
+    STATE.decks.forEach((deck, idx) => {
+      const isActive = idx === STATE.currentDeckIndex && deck.open;
+      const colorId = getThemeForDeck(deck);
+      const theme = THEME_GROUPS.flatMap(g => g.items).find(t => t.id === colorId) || { swatch: ['#9b7fd4'] };
+      const pipStyle = `linear-gradient(135deg, ${theme.swatch[0]}, ${theme.swatch[theme.swatch.length-1]})`;
+      const commanderName = deck.commanders[0]?.name || '— no commander —';
+      const cardLine = `${deck.cards.length} cards${deck.tokens.length ? ' · ' + deck.tokens.length + ' tokens' : ''}`;
+
+      // Build action buttons depending on open/closed state
+      const actions = [];
+      if (deck.open) {
+        // Open deck: offer switch-to (only when not the active one)
+        if (idx !== STATE.currentDeckIndex) {
+          actions.push(el('button', {
+            class: 'btn',
+            title: 'Switch to this deck',
+            onclick: () => {
+              STATE.currentDeckIndex = idx;
+              saveDecks();
+              renderAll();
+              closeTopmostModal();
+            }
+          }, [icon('arrow_forward'), document.createTextNode(' Switch to')]));
+        } else {
+          // Active deck — just show "Active" as a static badge
+          actions.push(el('span', {
+            class: 'btn ghost',
+            style: { color: 'var(--accent)', fontWeight: '500', cursor: 'default' }
+          }, [icon('check'), document.createTextNode(' Active')]));
+        }
+      } else {
+        // Closed deck: offer Open button (disabled at cap)
+        const openBtn = el('button', {
+          class: 'btn' + (atCap ? ' disabled' : ''),
+          title: atCap ? 'Close some tabs to open this deck' : 'Open in tab',
+          disabled: atCap ? '' : null,
+          onclick: atCap ? null : () => {
+            if (openDeckInTab(idx, true)) {
+              renderAll();
+              closeTopmostModal();
+            }
+          }
+        }, [icon('tab'), document.createTextNode(' Open')]);
+        actions.push(openBtn);
+      }
+      // Duplicate (always enabled; at cap, duplicate is created closed)
+      actions.push(el('button', {
+        class: 'btn ghost icon',
+        title: 'Duplicate deck',
+        onclick: () => {
+          const copy = JSON.parse(JSON.stringify(deck));
+          copy.name = generateDuplicateName(deck.name || `Deck ${idx + 1}`);
+          const atCapNow = getOpenCount() >= MAX_OPEN_TABS;
+          copy.open = !atCapNow;
+          STATE.decks.splice(idx + 1, 0, copy);
+          if (!atCapNow && STATE.currentDeckIndex > idx) STATE.currentDeckIndex++;
+          saveDecks();
+          renderAll();
+          refresh();
+          if (atCapNow) {
+            showNotification(`Duplicated as "${copy.name}". Find it in the Deck Library — too many tabs are open.`, 'info', 'Duplicated', 6000);
+          } else {
+            showNotification(`Duplicated as "${copy.name}"`, 'success');
+          }
+        }
+      }, [icon('content_copy')]));
+      // Delete (always)
+      actions.push(el('button', {
+        class: 'btn ghost icon danger',
+        title: 'Delete deck',
+        onclick: () => {
+          if (isDeckEmpty(deck)) {
+            deleteDeckAt(idx);
+            refresh();
+            renderAll();
+            return;
+          }
+          showConfirmDialog({
+            title: 'Delete Deck',
+            message: `Are you sure you want to delete "<b style="color:var(--accent)">${escapeHtml(deck.name || `Deck ${idx + 1}`)}</b>"?<br><br>This action cannot be undone.`,
+            confirmLabel: 'Delete',
+            confirmClass: 'danger',
+            onConfirm: () => {
+              deleteDeckAt(idx);
+              refresh();
+              renderAll();
+            }
+          });
+        }
+      }, [icon('delete')]));
+
+      const row = el('div', { class: 'lib-row' + (isActive ? ' active' : '') }, [
+        el('span', { class: 'lib-pip', style: { background: pipStyle } }),
+        el('div', {}, [
+          el('div', { class: 'lib-name' }, deck.name || `Deck ${idx + 1}`),
+          el('div', { class: 'lib-sub' }, [
+            el('span', { style: { color: 'var(--ink-2)' } }, commanderName),
+            el('span', {}, '·'),
+            el('span', { class: 'mono' }, cardLine),
+          ])
+        ]),
+        el('div', { class: 'lib-actions' }, actions)
+      ]);
+      listWrap.appendChild(row);
+    });
+  };
+
+  body.appendChild(statsWrap);
+  body.appendChild(listWrap);
+  refresh();
+  openModal({
+    content: el('div', { class: 'modal-shell' }, [head, body])
+  });
+}
+
+// Helper: generateDuplicateName produces "Foo (Copy)" / "Foo (Copy 2)" / …
+function generateDuplicateName(sourceName) {
+  const existing = new Set(STATE.decks.map(d => d.name));
+  const base = sourceName.replace(/ \(Copy(?: \d+)?\)$/, '');
+  let candidate = `${base} (Copy)`;
+  let n = 2;
+  while (existing.has(candidate)) {
+    candidate = `${base} (Copy ${n})`;
+    n++;
+  }
+  return candidate;
+}
+
+// Helper: delete the deck at idx, fixing the current-index pointer
+function deleteDeckAt(idx) {
+  const captured = STATE.decks[idx].name || `Deck ${idx + 1}`;
+  STATE.decks.splice(idx, 1);
+  if (STATE.decks.length === 0) {
+    STATE.decks.push(createNewDeck());
+    STATE.currentDeckIndex = 0;
+  } else {
+    if (STATE.currentDeckIndex > idx) {
+      STATE.currentDeckIndex--;
+    } else if (STATE.currentDeckIndex === idx) {
+      if (STATE.currentDeckIndex >= STATE.decks.length) STATE.currentDeckIndex = STATE.decks.length - 1;
+    }
+    if (!STATE.decks[STATE.currentDeckIndex] || !STATE.decks[STATE.currentDeckIndex].open) {
+      const openIndices = STATE.decks.map((d, i) => d.open ? i : -1).filter(i => i >= 0);
+      if (openIndices.length > 0) {
+        let next = openIndices.filter(i => i <= STATE.currentDeckIndex).pop();
+        if (next === undefined) next = openIndices[0];
+        STATE.currentDeckIndex = next;
+      } else {
+        STATE.decks[STATE.currentDeckIndex].open = true;
+      }
+    }
+  }
+  saveDecks();
+  showNotification(`Deleted "${captured}"`, 'success');
+}
+
+// ─────────────────────────────────────────────────────────────────────────
 // Modal: Rename deck
 // ─────────────────────────────────────────────────────────────────────────
 function openRenameDeckModal() {
@@ -3816,7 +4107,7 @@ function openRenameDeckModal() {
     el('button', { class: 'btn ghost', onclick: () => closeTopmostModal() }, 'Cancel'),
     el('button', { class: 'btn primary', onclick: doSave }, 'Save')
   ]);
-  openModal({ content: el('div', {}, [head, body, foot]) });
+  openModal({ content: el('div', { class: 'modal-shell' }, [head, body, foot]) });
   setTimeout(() => { input.focus(); input.select(); }, 50);
 }
 
@@ -3828,30 +4119,20 @@ function openDeleteDeckModal(idx) {
   const deck = STATE.decks[target];
   const deckName = deck.name || `Deck ${target + 1}`;
   const isEmpty = isDeckEmpty(deck);
-  const doDelete = () => {
-    const captured = deckName;
-    STATE.decks.splice(target, 1);
-    if (STATE.decks.length === 0) {
-      STATE.decks.push(createNewDeck());
-      STATE.currentDeckIndex = 0;
-    } else {
-      if (STATE.currentDeckIndex > target) {
-        STATE.currentDeckIndex--;
-      } else if (STATE.currentDeckIndex === target) {
-        if (STATE.currentDeckIndex >= STATE.decks.length) STATE.currentDeckIndex = STATE.decks.length - 1;
-      }
-    }
-    saveDecks();
+  if (isEmpty) {
+    deleteDeckAt(target);
     renderAll();
-    showNotification(`Deleted "${captured}"`, 'success');
-  };
-  if (isEmpty) { doDelete(); return; }
+    return;
+  }
   showConfirmDialog({
     title: 'Delete Deck',
     message: `Are you sure you want to delete "<b style="color:var(--accent)">${escapeHtml(deckName)}</b>"?<br><br>This action cannot be undone.`,
     confirmLabel: 'Delete',
     confirmClass: 'danger',
-    onConfirm: doDelete
+    onConfirm: () => {
+      deleteDeckAt(target);
+      renderAll();
+    }
   });
 }
 
@@ -3916,6 +4197,25 @@ function setupEventListeners() {
   $('exportBtn').addEventListener('click', openExportModal);
   $('searchBtn').addEventListener('click', openSearchModal);
   $('settingsBtn').addEventListener('click', openSettingsModal);
+  $('deckLibraryBtn').addEventListener('click', openDeckLibraryModal);
+  $('newDeckBtn').addEventListener('click', () => {
+    const atCap = getOpenCount() >= MAX_OPEN_TABS;
+    const deck = createNewDeck();
+    if (atCap) {
+      // Create as closed; keep current active deck
+      deck.open = false;
+      STATE.decks.push(deck);
+      saveDecks();
+      renderAll();
+      showNotification(`"${deck.name}" created. Find it in the Deck Library — too many tabs are open.`, 'info', 'New deck', 6000);
+    } else {
+      STATE.decks.push(deck);
+      STATE.currentDeckIndex = STATE.decks.length - 1;
+      saveDecks();
+      renderAll();
+      showNotification('New deck created', 'success');
+    }
+  });
 
   $('deckSearch').addEventListener('input', (e) => {
     STATE.deckSearch = e.target.value;
