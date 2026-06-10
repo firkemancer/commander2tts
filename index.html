@@ -2975,6 +2975,19 @@
             transform: translateX(0);
         }
 
+        /* When the sideboard is open, shrink the deck area so cards aren't covered */
+        .deck-content-scroll,
+        .deck-controls-sticky {
+            transition: margin-right 0.25s ease;
+        }
+
+        @media (min-width: 700px) {
+            .right-panel.sideboard-open .deck-content-scroll,
+            .right-panel.sideboard-open .deck-controls-sticky {
+                margin-right: 420px;
+            }
+        }
+
         .sideboard-header {
             display: flex;
             align-items: center;
@@ -3131,53 +3144,68 @@
             opacity: 1;
         }
 
-        .sideboard-card-actions {
+        /* Circular floating buttons mirroring the main deck card design */
+        .sideboard-card-remove-btn {
             position: absolute;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            display: flex;
-            opacity: 0;
-            transition: opacity 0.2s;
-        }
-
-        .sideboard-card:hover .sideboard-card-actions {
-            opacity: 1;
-        }
-
-        .sideboard-card-actions button {
-            flex: 1;
-            border: none;
+            top: 8px;
+            right: 8px;
+            background: rgba(231, 76, 60, 0.9);
             color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
             cursor: pointer;
-            padding: 0.45rem 0;
+            font-size: 1rem;
+            font-weight: bold;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 0.25rem;
-            font-size: 0.72rem;
-            font-weight: 600;
-            transition: all 0.15s;
+            transition: all 0.2s;
+            opacity: 0;
+            z-index: 10;
         }
 
-        .sideboard-card-actions .material-icons {
-            font-size: 16px;
-        }
-
-        .sideboard-card-remove-btn {
-            background: rgba(231, 76, 60, 0.92);
+        .sideboard-card:hover .sideboard-card-remove-btn {
+            opacity: 1;
         }
 
         .sideboard-card-remove-btn:hover {
             background: rgba(192, 57, 43, 1);
+            transform: scale(1.1);
         }
 
         .sideboard-card-swap-btn {
-            background: rgba(155, 127, 212, 0.92);
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(155, 127, 212, 0.9);
+            color: white;
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            opacity: 0;
+            z-index: 10;
+        }
+
+        .sideboard-card-swap-btn .material-icons {
+            font-size: 18px;
+            line-height: 1;
+        }
+
+        .sideboard-card:hover .sideboard-card-swap-btn {
+            opacity: 1;
         }
 
         .sideboard-card-swap-btn:hover {
             background: rgba(155, 127, 212, 1);
+            transform: scale(1.1);
         }
 
         /* Add-to-sideboard button on search results */
@@ -3224,8 +3252,13 @@
             transition: background 0.2s;
         }
 
+        .deck-card.swap-target:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent);
+        }
+
         .deck-card.swap-target:hover .deck-card-swap-overlay {
-            background: rgba(155, 127, 212, 0.65);
+            background: color-mix(in srgb, var(--accent) 55%, rgba(0, 0, 0, 0.62));
         }
 
         .deck-card-swap-overlay .material-icons {
@@ -4027,11 +4060,13 @@
         let altArtCurrentCopy = 0; // index into the indices array
         let altArtChanged = false; // track if any art was changed
         let swapModeCard = null; // sideboard card currently armed for swapping (null = not in swap mode)
+        let sideboard = []; // global sideboard, shared across all decks
 
         // Initialize
         function init() {
             loadSavedTheme();
             loadDecks();
+            loadSideboard();
             setupEventListeners();
             renderDeck();
             updateCardBackPreview();
@@ -4056,9 +4091,6 @@
                     }
                     if (!deck.commanders) {
                         deck.commanders = [];
-                    }
-                    if (!deck.sideboard) {
-                        deck.sideboard = [];
                     }
                 });
             }
@@ -4136,13 +4168,41 @@
             localStorage.setItem('commander2tts_decks', JSON.stringify(decks));
         }
 
+        // Global sideboard (shared across all decks)
+        function loadSideboard() {
+            const saved = localStorage.getItem('commander2tts_sideboard');
+            if (saved) {
+                try { sideboard = JSON.parse(saved) || []; } catch (e) { sideboard = []; }
+            }
+            // Migrate any legacy per-deck sideboards into the global one (one-time)
+            let migrated = false;
+            decks.forEach(deck => {
+                if (Array.isArray(deck.sideboard)) {
+                    if (deck.sideboard.length > 0) {
+                        sideboard.push(...deck.sideboard);
+                        migrated = true;
+                    }
+                    delete deck.sideboard;
+                }
+            });
+            if (migrated) {
+                // Cap at the limit after merging
+                if (sideboard.length > SIDEBOARD_LIMIT) sideboard = sideboard.slice(0, SIDEBOARD_LIMIT);
+                saveSideboard();
+                saveDecks();
+            }
+        }
+
+        function saveSideboard() {
+            localStorage.setItem('commander2tts_sideboard', JSON.stringify(sideboard));
+        }
+
         function createNewDeck() {
             return {
                 name: `Deck ${decks.length + 1}`,
                 commanders: [],
                 cards: [],
                 tokens: [],
-                sideboard: [],
                 cardBackUrl: 'https://i.imgur.com/tsTuiWN.png'
             };
         }
@@ -5454,6 +5514,7 @@
                 closeSideboardSidebar();
             } else {
                 closeStatsSidebar();
+                document.querySelector('.right-panel').classList.add('sideboard-open');
                 sidebar.classList.add('open');
                 btn.classList.add('active');
                 renderSideboard();
@@ -5463,13 +5524,12 @@
         function closeSideboardSidebar() {
             document.getElementById('sideboardSidebar').classList.remove('open');
             document.getElementById('sideboardBtn').classList.remove('active');
+            document.querySelector('.right-panel').classList.remove('sideboard-open');
             // Leaving the sideboard cancels any in-progress swap
             exitSwapMode();
         }
 
         function renderSideboard() {
-            const deck = getCurrentDeck();
-            const sideboard = deck.sideboard || (deck.sideboard = []);
             const body = document.getElementById('sideboardBody');
             const countEl = document.getElementById('sideboardCount');
 
@@ -5496,10 +5556,8 @@
             div.innerHTML = `
                 <img src="${card.image_url}" alt="${card.name}" class="sideboard-card-image" loading="lazy">
                 <div class="sideboard-card-name">${card.name}</div>
-                <div class="sideboard-card-actions">
-                    <button class="sideboard-card-remove-btn" title="Remove from sideboard"><span class="material-icons">delete</span>Remove</button>
-                    <button class="sideboard-card-swap-btn" title="Swap into deck"><span class="material-icons">autorenew</span>Swap</button>
-                </div>
+                <button class="sideboard-card-remove-btn" title="Remove from sideboard">×</button>
+                <button class="sideboard-card-swap-btn" title="Swap into deck"><span class="material-icons">autorenew</span></button>
             `;
 
             div.querySelector('.sideboard-card-remove-btn').addEventListener('click', (e) => {
@@ -5521,17 +5579,14 @@
         }
 
         function addToSideboard(card) {
-            const deck = getCurrentDeck();
-            if (!deck.sideboard) deck.sideboard = [];
-
-            if (deck.sideboard.length >= SIDEBOARD_LIMIT) {
+            if (sideboard.length >= SIDEBOARD_LIMIT) {
                 showNotification(`Sideboard is full (max ${SIDEBOARD_LIMIT} cards)`, 'warning');
                 return;
             }
 
             const imageUrl = card.image_url || card.image_uris?.normal || (card.card_faces?.[0]?.image_uris?.normal);
 
-            deck.sideboard.push({
+            sideboard.push({
                 id: card.id,
                 name: card.name,
                 type_line: card.type_line,
@@ -5544,12 +5599,14 @@
                 legalities: card.legalities || {}
             });
 
-            saveDecks();
+            saveSideboard();
             renderSideboard();
 
             // Open the sideboard so the user sees where the card went
             const sidebar = document.getElementById('sideboardSidebar');
             if (!sidebar.classList.contains('open')) {
+                closeStatsSidebar();
+                document.querySelector('.right-panel').classList.add('sideboard-open');
                 sidebar.classList.add('open');
                 document.getElementById('sideboardBtn').classList.add('active');
             }
@@ -5557,15 +5614,14 @@
         }
 
         function removeFromSideboard(index) {
-            const deck = getCurrentDeck();
-            if (!deck.sideboard || index < 0 || index >= deck.sideboard.length) return;
-            const removed = deck.sideboard[index];
+            if (index < 0 || index >= sideboard.length) return;
+            const removed = sideboard[index];
             // If the removed card was armed for swapping, cancel swap mode
             if (swapModeCard && removed === swapModeCard) {
                 exitSwapMode();
             }
-            deck.sideboard.splice(index, 1);
-            saveDecks();
+            sideboard.splice(index, 1);
+            saveSideboard();
             renderSideboard();
         }
 
@@ -5573,7 +5629,7 @@
             swapModeCard = card;
             const banner = document.getElementById('sideboardSwapBanner');
             document.getElementById('sideboardSwapText').textContent =
-                `Click a card in your deck to replace it with "${card.name}".`;
+                `Click a card in your deck to swap it with "${card.name}".`;
             banner.classList.add('show');
             renderDeck();
         }
@@ -5589,23 +5645,34 @@
             if (!swapModeCard) return;
             const deck = getCurrentDeck();
 
-            // Remove one copy of the clicked card from the main deck
+            // Locate the clicked card in the main deck
             const removeId = (ids && ids.length > 0) ? ids[0] : targetCard.id;
-            const idx = deck.cards.findIndex(c => c.id === removeId);
-            if (idx === -1) {
+            const deckIdx = deck.cards.findIndex(c => c.id === removeId);
+            if (deckIdx === -1) {
                 showNotification('Could not find that card to swap', 'warning');
                 return;
             }
-            const replaced = deck.cards[idx];
 
-            // Insert the sideboard card (deep clone) in the same slot
-            deck.cards.splice(idx, 1, JSON.parse(JSON.stringify(swapModeCard)));
+            // Locate the armed sideboard card
+            const sbIdx = sideboard.indexOf(swapModeCard);
+            if (sbIdx === -1) {
+                showNotification('Could not find that sideboard card', 'warning');
+                exitSwapMode();
+                return;
+            }
 
-            const swappedInName = swapModeCard.name;
+            // True swap: the two cards exchange places (deep clones keep arrays independent)
+            const deckCard = deck.cards[deckIdx];
+            const sbCard = sideboard[sbIdx];
+            deck.cards[deckIdx] = JSON.parse(JSON.stringify(sbCard));
+            sideboard[sbIdx] = JSON.parse(JSON.stringify(deckCard));
+
             saveDecks();
-            exitSwapMode(); // resets state + re-renders deck
+            saveSideboard();
+            exitSwapMode(); // resets state + re-renders deck (and sideboard via renderDeck)
             updateCardCounts();
-            showNotification(`Swapped "${replaced.name}" → "${swappedInName}"`, 'success');
+            renderSideboard();
+            showNotification(`Swapped "${deckCard.name}" ⇄ "${sbCard.name}"`, 'success');
         }
 
         // ═══ Deck Validation ═══
