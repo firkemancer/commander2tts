@@ -2925,6 +2925,313 @@
             font-size: 0.9rem;
         }
 
+        /* ═══ Sideboard ═══ */
+        .sideboard-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+
+        .sideboard-btn .material-icons {
+            font-size: 24px;
+        }
+
+        .sideboard-btn:hover {
+            opacity: 0.85;
+            transform: scale(1.1);
+        }
+
+        .sideboard-btn.active {
+            box-shadow: 0 0 0 3px var(--bg-primary), 0 0 0 5px var(--accent);
+        }
+
+        .sideboard-sidebar {
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            width: 420px;
+            max-width: 95%;
+            background: var(--bg-card);
+            border-left: 2px solid var(--border);
+            z-index: 60;
+            display: flex;
+            flex-direction: column;
+            transform: translateX(100%);
+            transition: transform 0.25s ease;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .sideboard-sidebar.open {
+            transform: translateX(0);
+        }
+
+        .sideboard-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 1.2rem;
+            border-bottom: 2px solid var(--border);
+            flex-shrink: 0;
+            gap: 0.5rem;
+        }
+
+        .sideboard-title {
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            white-space: nowrap;
+        }
+
+        .sideboard-count {
+            background: var(--accent);
+            color: white;
+            padding: 0.2rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-left: auto;
+        }
+
+        .sideboard-close {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+            transition: all 0.2s;
+            flex-shrink: 0;
+        }
+
+        .sideboard-close .material-icons {
+            font-size: 18px;
+        }
+
+        .sideboard-close:hover {
+            background: var(--accent);
+            color: white;
+        }
+
+        .sideboard-swap-banner {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.6rem 1rem;
+            background: var(--accent);
+            color: white;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .sideboard-swap-banner.show {
+            display: flex;
+        }
+
+        .sideboard-swap-banner .swap-banner-text {
+            flex: 1;
+            line-height: 1.3;
+        }
+
+        .sideboard-swap-banner .swap-banner-cancel {
+            background: rgba(255, 255, 255, 0.25);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 0.3rem 0.7rem;
+            cursor: pointer;
+            font-size: 0.78rem;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .sideboard-swap-banner .swap-banner-cancel:hover {
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .sideboard-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.8rem 1rem;
+        }
+
+        .sideboard-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.8rem;
+        }
+
+        .sideboard-empty {
+            text-align: center;
+            padding: 2rem 1rem;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .sideboard-card {
+            background: var(--bg-card);
+            border: 2px solid var(--border);
+            border-radius: 10px;
+            overflow: hidden;
+            position: relative;
+            transition: all 0.2s;
+            aspect-ratio: 5/7;
+        }
+
+        .sideboard-card:hover {
+            border-color: var(--accent);
+            transform: translateY(-3px);
+            box-shadow: 0 6px 14px rgba(0, 0, 0, 0.3);
+            z-index: 5;
+        }
+
+        .sideboard-card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            background: var(--bg-secondary);
+        }
+
+        .sideboard-card-name {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 0.4rem;
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: white;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.2s;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0) 100%);
+            pointer-events: none;
+        }
+
+        .sideboard-card:hover .sideboard-card-name {
+            opacity: 1;
+        }
+
+        .sideboard-card-actions {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            display: flex;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .sideboard-card:hover .sideboard-card-actions {
+            opacity: 1;
+        }
+
+        .sideboard-card-actions button {
+            flex: 1;
+            border: none;
+            color: white;
+            cursor: pointer;
+            padding: 0.45rem 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.25rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            transition: all 0.15s;
+        }
+
+        .sideboard-card-actions .material-icons {
+            font-size: 16px;
+        }
+
+        .sideboard-card-remove-btn {
+            background: rgba(231, 76, 60, 0.92);
+        }
+
+        .sideboard-card-remove-btn:hover {
+            background: rgba(192, 57, 43, 1);
+        }
+
+        .sideboard-card-swap-btn {
+            background: rgba(155, 127, 212, 0.92);
+        }
+
+        .sideboard-card-swap-btn:hover {
+            background: rgba(155, 127, 212, 1);
+        }
+
+        /* Add-to-sideboard button on search results */
+        .card-item-sideboard-btn {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+            border: 2px solid var(--border);
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            margin-left: 0.5rem;
+            transition: all 0.2s;
+        }
+
+        .card-item-sideboard-btn .material-icons {
+            font-size: 18px;
+        }
+
+        .card-item-sideboard-btn:hover {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+        }
+
+        /* Swap-mode visuals on main deck cards */
+        .deck-card.swap-target {
+            cursor: pointer;
+        }
+
+        .deck-card-swap-overlay {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.62);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            z-index: 15;
+            transition: background 0.2s;
+        }
+
+        .deck-card.swap-target:hover .deck-card-swap-overlay {
+            background: rgba(155, 127, 212, 0.65);
+        }
+
+        .deck-card-swap-overlay .material-icons {
+            font-size: 42px;
+        }
+
         /* Stats Sections */
         .stats-section-title {
             font-size: 0.7rem;
@@ -3253,6 +3560,7 @@
             </select>
             <button class="new-deck-btn" id="newDeckBtn"><span class="material-icons">add</span></button>
             <button class="stats-btn" id="statsBtn" title="Deck Statistics"><span class="material-icons">bar_chart</span></button>
+            <button class="sideboard-btn" id="sideboardBtn" title="Sideboard"><span class="material-icons">compare_arrows</span></button>
             <button class="deck-menu-btn" id="deckMenuBtn">
                 <span class="material-icons">more_vert</span>
                 <div class="deck-menu" id="deckMenu">
@@ -3369,6 +3677,23 @@
                 </div>
                 <div class="stats-sidebar-body" id="statsBody">
                     <div class="stats-empty">Import or build a deck to see statistics</div>
+                </div>
+            </div>
+
+            <!-- Sideboard Sidebar -->
+            <div class="sideboard-sidebar" id="sideboardSidebar">
+                <div class="sideboard-header">
+                    <h3 class="sideboard-title"><span class="material-icons" style="font-size: 20px; vertical-align: middle; margin-right: 0.3rem;">compare_arrows</span>Sideboard</h3>
+                    <span class="sideboard-count" id="sideboardCount">0/100</span>
+                    <button class="sideboard-close" id="sideboardClose"><span class="material-icons">close</span></button>
+                </div>
+                <div class="sideboard-swap-banner" id="sideboardSwapBanner">
+                    <span class="material-icons" style="font-size:18px;">autorenew</span>
+                    <span class="swap-banner-text" id="sideboardSwapText">Click a card in your deck to swap.</span>
+                    <button class="swap-banner-cancel" id="sideboardSwapCancel">Cancel</button>
+                </div>
+                <div class="sideboard-body" id="sideboardBody">
+                    <div class="sideboard-empty">No cards yet. Add cards from the search list to compare swaps.</div>
                 </div>
             </div>
 
@@ -3701,6 +4026,7 @@
         let altArtMode = 'all'; // 'all' or 'individual'
         let altArtCurrentCopy = 0; // index into the indices array
         let altArtChanged = false; // track if any art was changed
+        let swapModeCard = null; // sideboard card currently armed for swapping (null = not in swap mode)
 
         // Initialize
         function init() {
@@ -3730,6 +4056,9 @@
                     }
                     if (!deck.commanders) {
                         deck.commanders = [];
+                    }
+                    if (!deck.sideboard) {
+                        deck.sideboard = [];
                     }
                 });
             }
@@ -3813,6 +4142,7 @@
                 commanders: [],
                 cards: [],
                 tokens: [],
+                sideboard: [],
                 cardBackUrl: 'https://i.imgur.com/tsTuiWN.png'
             };
         }
@@ -3844,16 +4174,20 @@
             // Deck management
             document.getElementById('deckSelector').addEventListener('change', (e) => {
                 currentDeckIndex = parseInt(e.target.value);
+                exitSwapMode();
                 renderDeck();
+                renderSideboard();
                 updateCardBackPreview();
             });
 
             document.getElementById('newDeckBtn').addEventListener('click', () => {
                 decks.push(createNewDeck());
                 currentDeckIndex = decks.length - 1;
+                exitSwapMode();
                 saveDecks();
                 updateDeckSelector();
                 renderDeck();
+                renderSideboard();
             });
 
             // Search
@@ -4043,6 +4377,10 @@
             // Stats sidebar
             document.getElementById('statsBtn').addEventListener('click', toggleStatsSidebar);
             document.getElementById('statsClose').addEventListener('click', closeStatsSidebar);
+
+            document.getElementById('sideboardBtn').addEventListener('click', toggleSideboardSidebar);
+            document.getElementById('sideboardClose').addEventListener('click', closeSideboardSidebar);
+            document.getElementById('sideboardSwapCancel').addEventListener('click', exitSwapMode);
 
             // Settings tabs
             document.querySelectorAll('.settings-tab').forEach(tab => {
@@ -4576,9 +4914,15 @@
                     <span class="card-name">${card.name}</span>
                     <span class="card-type">${card.type_line}</span>
                 </div>
+                <button class="card-item-sideboard-btn" title="Add to sideboard"><span class="material-icons">add</span></button>
             `;
 
             div.addEventListener('click', () => addCardToDeck(card));
+
+            div.querySelector('.card-item-sideboard-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                addToSideboard(card);
+            });
             
             // Hover preview
             div.addEventListener('mouseenter', (e) => showCardPreview(imageUrl, e));
@@ -5088,6 +5432,7 @@
             if (isOpen) {
                 closeStatsSidebar();
             } else {
+                closeSideboardSidebar();
                 sidebar.classList.add('open');
                 btn.classList.add('active');
                 updateStats();
@@ -5097,6 +5442,170 @@
         function closeStatsSidebar() {
             document.getElementById('statsSidebar').classList.remove('open');
             document.getElementById('statsBtn').classList.remove('active');
+        }
+
+        // ═══ Sideboard ═══
+        const SIDEBOARD_LIMIT = 100;
+
+        function toggleSideboardSidebar() {
+            const sidebar = document.getElementById('sideboardSidebar');
+            const btn = document.getElementById('sideboardBtn');
+            if (sidebar.classList.contains('open')) {
+                closeSideboardSidebar();
+            } else {
+                closeStatsSidebar();
+                sidebar.classList.add('open');
+                btn.classList.add('active');
+                renderSideboard();
+            }
+        }
+
+        function closeSideboardSidebar() {
+            document.getElementById('sideboardSidebar').classList.remove('open');
+            document.getElementById('sideboardBtn').classList.remove('active');
+            // Leaving the sideboard cancels any in-progress swap
+            exitSwapMode();
+        }
+
+        function renderSideboard() {
+            const deck = getCurrentDeck();
+            const sideboard = deck.sideboard || (deck.sideboard = []);
+            const body = document.getElementById('sideboardBody');
+            const countEl = document.getElementById('sideboardCount');
+
+            countEl.textContent = `${sideboard.length}/${SIDEBOARD_LIMIT}`;
+
+            if (sideboard.length === 0) {
+                body.innerHTML = '<div class="sideboard-empty">No cards yet. Add cards from the search list to compare swaps.</div>';
+                return;
+            }
+
+            body.innerHTML = '';
+            const grid = document.createElement('div');
+            grid.className = 'sideboard-grid';
+            sideboard.forEach((card, index) => {
+                grid.appendChild(createSideboardCard(card, index));
+            });
+            body.appendChild(grid);
+        }
+
+        function createSideboardCard(card, index) {
+            const div = document.createElement('div');
+            div.className = 'sideboard-card';
+
+            div.innerHTML = `
+                <img src="${card.image_url}" alt="${card.name}" class="sideboard-card-image" loading="lazy">
+                <div class="sideboard-card-name">${card.name}</div>
+                <div class="sideboard-card-actions">
+                    <button class="sideboard-card-remove-btn" title="Remove from sideboard"><span class="material-icons">delete</span>Remove</button>
+                    <button class="sideboard-card-swap-btn" title="Swap into deck"><span class="material-icons">autorenew</span>Swap</button>
+                </div>
+            `;
+
+            div.querySelector('.sideboard-card-remove-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                removeFromSideboard(index);
+            });
+
+            div.querySelector('.sideboard-card-swap-btn').addEventListener('click', (e) => {
+                e.stopPropagation();
+                enterSwapMode(card);
+            });
+
+            // Hover preview (reuses the global zoom preview)
+            div.addEventListener('mouseenter', (e) => showCardPreview(card.image_url, e));
+            div.addEventListener('mousemove', (e) => moveCardPreview(e));
+            div.addEventListener('mouseleave', hideCardPreview);
+
+            return div;
+        }
+
+        function addToSideboard(card) {
+            const deck = getCurrentDeck();
+            if (!deck.sideboard) deck.sideboard = [];
+
+            if (deck.sideboard.length >= SIDEBOARD_LIMIT) {
+                showNotification(`Sideboard is full (max ${SIDEBOARD_LIMIT} cards)`, 'warning');
+                return;
+            }
+
+            const imageUrl = card.image_url || card.image_uris?.normal || (card.card_faces?.[0]?.image_uris?.normal);
+
+            deck.sideboard.push({
+                id: card.id,
+                name: card.name,
+                type_line: card.type_line,
+                image_url: imageUrl,
+                scryfall_uri: card.scryfall_uri,
+                cmc: card.cmc || 0,
+                colors: card.colors || [],
+                color_identity: card.color_identity || [],
+                keywords: card.keywords || [],
+                legalities: card.legalities || {}
+            });
+
+            saveDecks();
+            renderSideboard();
+
+            // Open the sideboard so the user sees where the card went
+            const sidebar = document.getElementById('sideboardSidebar');
+            if (!sidebar.classList.contains('open')) {
+                sidebar.classList.add('open');
+                document.getElementById('sideboardBtn').classList.add('active');
+            }
+            showNotification(`${card.name} added to sideboard`, 'success');
+        }
+
+        function removeFromSideboard(index) {
+            const deck = getCurrentDeck();
+            if (!deck.sideboard || index < 0 || index >= deck.sideboard.length) return;
+            const removed = deck.sideboard[index];
+            // If the removed card was armed for swapping, cancel swap mode
+            if (swapModeCard && removed === swapModeCard) {
+                exitSwapMode();
+            }
+            deck.sideboard.splice(index, 1);
+            saveDecks();
+            renderSideboard();
+        }
+
+        function enterSwapMode(card) {
+            swapModeCard = card;
+            const banner = document.getElementById('sideboardSwapBanner');
+            document.getElementById('sideboardSwapText').textContent =
+                `Click a card in your deck to replace it with "${card.name}".`;
+            banner.classList.add('show');
+            renderDeck();
+        }
+
+        function exitSwapMode() {
+            if (!swapModeCard) return;
+            swapModeCard = null;
+            document.getElementById('sideboardSwapBanner').classList.remove('show');
+            renderDeck();
+        }
+
+        function performSwap(targetCard, ids) {
+            if (!swapModeCard) return;
+            const deck = getCurrentDeck();
+
+            // Remove one copy of the clicked card from the main deck
+            const removeId = (ids && ids.length > 0) ? ids[0] : targetCard.id;
+            const idx = deck.cards.findIndex(c => c.id === removeId);
+            if (idx === -1) {
+                showNotification('Could not find that card to swap', 'warning');
+                return;
+            }
+            const replaced = deck.cards[idx];
+
+            // Insert the sideboard card (deep clone) in the same slot
+            deck.cards.splice(idx, 1, JSON.parse(JSON.stringify(swapModeCard)));
+
+            const swappedInName = swapModeCard.name;
+            saveDecks();
+            exitSwapMode(); // resets state + re-renders deck
+            updateCardCounts();
+            showNotification(`Swapped "${replaced.name}" → "${swappedInName}"`, 'success');
         }
 
         // ═══ Deck Validation ═══
@@ -5525,6 +6034,9 @@
 
             // Update stats sidebar if open
             updateStats();
+
+            // Keep the sideboard view in sync (e.g. after deck switch/duplicate)
+            renderSideboard();
         }
 
         function updateCardCounts() {
@@ -5704,7 +6216,23 @@
             if (ids) {
                 div.dataset.cardIds = JSON.stringify(ids);
             }
-            
+
+            // Swap mode: main-deck cards become click-to-replace targets with no other buttons
+            if (swapModeCard && !isCommander && !isToken) {
+                div.classList.add('swap-target');
+                div.innerHTML = `
+                    <img src="${card.image_url}" alt="${card.name}" class="deck-card-image" loading="lazy">
+                    <div class="deck-card-name" style="opacity:1;">${card.name}</div>
+                    ${count > 1 ? `<div class="deck-card-count">×${count}</div>` : ''}
+                    <div class="deck-card-swap-overlay"><span class="material-icons">autorenew</span></div>
+                `;
+                div.addEventListener('click', () => performSwap(card, ids));
+                div.addEventListener('mouseenter', (e) => showCardPreview(card.image_url, e));
+                div.addEventListener('mousemove', (e) => moveCardPreview(e));
+                div.addEventListener('mouseleave', hideCardPreview);
+                return div;
+            }
+
             const deck = getCurrentDeck();
             const isEligibleCommander = canBeCommander(card);
             const cardHasPartner = hasPartner(card);
