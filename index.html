@@ -960,18 +960,29 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            gap: 1.5rem;
+            gap: 1rem 1.5rem;
             border-bottom: 2px solid var(--border);
             position: sticky;
             top: 0;
             z-index: 1000;
+            /* Let the controls group drop to its own row when it can't fit,
+               instead of overflowing off the right edge. */
+            flex-wrap: wrap;
         }
 
         .header-left {
             display: flex;
             align-items: center;
             gap: 1.5rem;
-            flex-shrink: 0;
+            flex-shrink: 1;
+            min-width: 0;
+        }
+
+        /* Logo scales down with the viewport so it doesn't crowd the header
+           controls when zoomed in / on narrow screens. */
+        .app-logo {
+            width: clamp(180px, 30vw, 420px);
+            height: auto;
         }
 
         .header h1 {
@@ -1048,6 +1059,25 @@
             gap: 0.75rem;
             align-items: center;
             padding-right: 1rem;
+            /* Keep the group right-aligned, and when wrapped, place it on its
+               own row aligned to the right. */
+            margin-left: auto;
+        }
+
+        /* On narrower viewports (or when zoomed in) the controls wrap to a
+           second row; let the deck dropdown shrink so every button stays
+           visible instead of overflowing. */
+        @media (max-width: 900px) {
+            .header-controls {
+                width: 100%;
+                padding-right: 0;
+            }
+            .deck-selector {
+                flex: 1 1 auto;
+                width: auto;
+                min-width: 0;
+                max-width: none;
+            }
         }
 
         .deck-selector {
@@ -1076,12 +1106,7 @@
             display: flex;
             flex: 1;
             min-height: 0;
-        }
-
-        .container {
-            display: flex;
-            flex: 1;
-            min-height: 0;
+            position: relative;
         }
 
         .panel {
@@ -1107,10 +1132,25 @@
             min-height: 0;
         }
 
-        .left-panel {
+        .panel.left-panel {
+            position: absolute;
+            top: 0;
+            left: 0;
+            bottom: 0;
+            width: 450px;
+            max-width: 90%;
+            z-index: 60;
+            background: var(--bg-primary);
             border-right: 2px solid var(--border);
-            max-width: 450px;
             padding: 1.5rem 1.5rem 1.5rem 1.5rem !important;
+            overflow-y: auto;
+            transform: translateX(-100%);
+            transition: transform 0.25s ease;
+            box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .panel.left-panel.open {
+            transform: translateX(0);
         }
 
         .search-section {
@@ -1278,6 +1318,9 @@
 
         .deck-list {
             display: grid;
+            /* Fill the row edge-to-edge. The 200px min keeps enough columns that
+               dropping one or two when a side panel opens barely changes the card
+               size (no noticeable zoom), while leaving no trailing gap. */
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
             gap: 1rem;
         }
@@ -2959,8 +3002,8 @@
             top: 0;
             right: 0;
             bottom: 0;
-            width: 420px;
-            max-width: 95%;
+            width: 450px;
+            max-width: 90%;
             background: var(--bg-card);
             border-left: 2px solid var(--border);
             z-index: 60;
@@ -2975,16 +3018,19 @@
             transform: translateX(0);
         }
 
-        /* When the sideboard is open, shrink the deck area so cards aren't covered */
-        .deck-content-scroll,
-        .deck-controls-sticky {
-            transition: margin-right 0.25s ease;
-        }
-
+        /* When a side panel is open, reserve deck space so cards aren't covered.
+           The reservation is applied instantly (no transition) so the responsive
+           grid relayouts once cleanly instead of reflowing every frame of the
+           panel's slide animation (which makes the cards "twitch"). */
         @media (min-width: 700px) {
             .right-panel.sideboard-open .deck-content-scroll,
             .right-panel.sideboard-open .deck-controls-sticky {
-                margin-right: 420px;
+                margin-right: 450px;
+            }
+
+            .container.search-open .deck-content-scroll,
+            .container.search-open .deck-controls-sticky {
+                margin-left: 450px;
             }
         }
 
@@ -3579,7 +3625,7 @@
     </script>
     <div class="header">
         <div class="header-left">
-            <img src="logo.png" width="420" height="45">
+            <img src="logo.png" width="420" height="45" class="app-logo" alt="Commander2TTS">
             <!-- Import Controls -->
             <div class="moxfield-import-section">
                 <button class="import-btn-main" id="importDeckBtn">Import Deck</button>
@@ -3619,7 +3665,7 @@
     </div>
 
     <div class="container">
-        <div class="panel left-panel" id="leftPanel" style="display: none;">
+        <div class="panel left-panel" id="leftPanel">
             <div class="search-section">
                 <input 
                     type="text" 
@@ -4303,11 +4349,10 @@
             // Manual button toggle
             document.getElementById('manualBtn').addEventListener('click', () => {
                 const leftPanel = document.getElementById('leftPanel');
-                if (leftPanel.style.display === 'none') {
-                    leftPanel.style.display = 'flex';
-                } else {
-                    leftPanel.style.display = 'none';
-                }
+                const isOpen = leftPanel.classList.toggle('open');
+                document.querySelector('.container').classList.toggle('search-open', isOpen);
+                document.getElementById('manualBtn').classList.toggle('active', isOpen);
+                updateDeckGridColumns();
             });
 
             // Category and sort controls
@@ -4479,6 +4524,10 @@
 
             // ===== Keyboard shortcuts =====
             document.addEventListener('keydown', handleGlobalKeydown);
+
+            // Recompute the deck-grid card-size lock when the window resizes
+            // (keeps locked cards matching the natural size while a panel is open)
+            window.addEventListener('resize', updateDeckGridColumns);
         }
 
         // Returns true if the user is currently typing in an editable element.
@@ -5518,6 +5567,7 @@
                 sidebar.classList.add('open');
                 btn.classList.add('active');
                 renderSideboard();
+                updateDeckGridColumns();
             }
         }
 
@@ -5525,8 +5575,44 @@
             document.getElementById('sideboardSidebar').classList.remove('open');
             document.getElementById('sideboardBtn').classList.remove('active');
             document.querySelector('.right-panel').classList.remove('sideboard-open');
+            updateDeckGridColumns();
             // Leaving the sideboard cancels any in-progress swap
             exitSwapMode();
+        }
+
+        // Keeps deck cards from resizing ("zooming") when a side panel opens.
+        // Closed: CSS fills the row with 1fr (edge-to-edge). Open: we lock the
+        // card width to the natural closed size, so opening a panel only removes
+        // columns — the remaining cards keep their size (a small gap sits between
+        // the cards and the panel instead).
+        function updateDeckGridColumns() {
+            const rightPanel = document.querySelector('.right-panel');
+            const grids = document.querySelectorAll('.deck-list');
+            if (!rightPanel || grids.length === 0) return;
+
+            const anyPanelOpen =
+                document.getElementById('sideboardSidebar').classList.contains('open') ||
+                document.getElementById('leftPanel').classList.contains('open');
+
+            // Reservations only apply at >=700px (see media query); below that the
+            // panels overlay as drawers and the grid keeps its normal fill.
+            if (!anyPanelOpen || window.innerWidth < 700) {
+                grids.forEach(g => { g.style.gridTemplateColumns = ''; });
+                return;
+            }
+
+            // Natural (no-panel) deck width = right panel minus the scroll padding
+            // (1.5rem each side). This stays constant whether a panel is open or
+            // not, so the locked size always matches the closed layout.
+            const HPAD = 48;   // .deck-content-scroll horizontal padding (1.5rem * 2)
+            const GAP = 16;    // grid gap (1rem)
+            const MIN = 200;   // matches the CSS minmax min
+            const fullWidth = rightPanel.clientWidth - HPAD;
+            const n = Math.max(1, Math.floor((fullWidth + GAP) / (MIN + GAP)));
+            const cardW = (fullWidth - GAP * (n - 1)) / n;
+            grids.forEach(g => {
+                g.style.gridTemplateColumns = `repeat(auto-fill, ${cardW}px)`;
+            });
         }
 
         function renderSideboard() {
@@ -5609,6 +5695,7 @@
                 document.querySelector('.right-panel').classList.add('sideboard-open');
                 sidebar.classList.add('open');
                 document.getElementById('sideboardBtn').classList.add('active');
+                updateDeckGridColumns();
             }
             showNotification(`${card.name} added to sideboard`, 'success');
         }
@@ -6104,6 +6191,9 @@
 
             // Keep the sideboard view in sync (e.g. after deck switch/duplicate)
             renderSideboard();
+
+            // Re-apply the card-size lock if a side panel is open
+            updateDeckGridColumns();
         }
 
         function updateCardCounts() {
